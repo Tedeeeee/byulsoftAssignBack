@@ -9,4 +9,5 @@ public interface MemberMapper {
     void save(Member member);
     boolean checkNickName(String nickName);
     boolean checkEmail(String email);
+    Member findByEmail(String email);
 }

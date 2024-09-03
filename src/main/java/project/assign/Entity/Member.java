@@ -17,4 +17,3 @@ public class Member {
     private String phoneNumber;
 }
 
-

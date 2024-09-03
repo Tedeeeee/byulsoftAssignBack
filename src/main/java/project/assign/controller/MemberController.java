@@ -16,20 +16,20 @@ public class MemberController {
 
     @PostMapping("/register")
     public ResponseEntity<Integer> register(@RequestBody @Valid MemberDTO memberDTO) {
-        int N = memberService.registerMember(memberDTO);
-        return ResponseEntity.ok(N);
+        int result = memberService.registerMember(memberDTO);
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/checkNickName")
     public ResponseEntity<String> checkNickName(@RequestParam(name = "nickName") String nickName) {
         memberService.checkNickName(nickName);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("사용 가능한 닉네임입니다.");
     }
 
     @GetMapping("/checkEmail")
     public ResponseEntity<String> checkEmail(@RequestParam(name = "email") String email) {
         memberService.checkEmail(email);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("사용 가능한 이메일입니다.");
     }
 
 }
