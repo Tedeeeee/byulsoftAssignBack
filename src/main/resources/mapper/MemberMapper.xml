@@ -4,8 +4,8 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="project.assign.repository.MemberMapper">
-    <insert id="save" parameterType="project.assign.dto.MemberDTO">
-        INSERT INTO Member(name, age)
-        values (#{name}, #{age})
+    <insert id="save" parameterType="project.assign.Entity.Member">
+        INSERT INTO Member(email, password, nickName, name, phoneNumber)
+        values (#{email}, #{password}, #{nickName}, #{name}, #{phoneNumber})
     </insert>
 </mapper>

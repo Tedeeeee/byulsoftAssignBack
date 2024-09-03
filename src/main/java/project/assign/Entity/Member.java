@@ -1,14 +1,20 @@
-package project.assign.dto;
+package project.assign.Entity;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-@Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class MemberDTO {
+@Getter
+@Builder
+public class Member {
     private String email;
     private String password;
     private String nickName;
     private String name;
     private String phoneNumber;
 }
+
+

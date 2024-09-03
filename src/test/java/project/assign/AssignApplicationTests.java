@@ -15,16 +15,4 @@ class AssignApplicationTests {
 	void contextLoads() {
 	}
 
-	@Autowired
-	private MemberMapper memberMapper;
-
-	@Test
-	@DisplayName("회원가입 테스트")
-	public void memberSaveTest() {
-		memberMapper.save(new MemberDTO("첫번째 회원", 12));
-
-		// then
-
-	}
-
 }
