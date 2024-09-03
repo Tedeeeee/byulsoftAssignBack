@@ -17,12 +17,18 @@ public class MemberController {
     @PostMapping("/register")
     public ResponseEntity<Integer> register(@RequestBody @Valid MemberDTO memberDTO) {
         int N = memberService.registerMember(memberDTO);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(N);
     }
 
     @GetMapping("/checkNickName")
     public ResponseEntity<String> checkNickName(@RequestParam(name = "nickName") String nickName) {
         memberService.checkNickName(nickName);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/checkEmail")
+    public ResponseEntity<String> checkEmail(@RequestParam(name = "email") String email) {
+        memberService.checkEmail(email);
         return ResponseEntity.ok().build();
     }
 

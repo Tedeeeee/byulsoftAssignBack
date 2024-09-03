@@ -10,8 +10,14 @@
     </insert>
 
     <select id="checkNickName" resultType="java.lang.Boolean">
-        select case when count(*) > 0 then true else false end
+        select if(count(*) > 0, 1, 0)
         FROM member
         where nickName = #{nickName}
+    </select>
+
+    <select id="checkEmail" resultType="java.lang.Boolean">
+        select if(count(*) > 0, 1, 0)
+        FROM member
+        where email = #{email}
     </select>
 </mapper>

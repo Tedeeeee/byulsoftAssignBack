@@ -13,10 +13,12 @@ public class MemberServiceImpl implements MemberService{
 
     private final MemberMapper memberMapper;
 
-
     @Transactional
     @Override
     public int registerMember(MemberDTO memberDto) {
+        // 중요한 것은 프론트에서 이메일과 닉네임의 체크를 꼭 해야 한다는 것이다.
+        // 이후의 일은 무조건 체크가 끝났다는 전제하로 진행된다는 것이다.
+        // 즉, 프론트에서 true, false 를 통해 이메일과 닉네임의 체크가 종료되어야만 해당 API가 실행된다고 본다.
         Member member = Member.builder()
                 .email(memberDto.getEmail())
                 .password(memberDto.getPassword())
@@ -37,5 +39,12 @@ public class MemberServiceImpl implements MemberService{
         boolean checkNickName = memberMapper.checkNickName(nickName);
 
         if(checkNickName) throw new RuntimeException("이미 존재하는 닉네임 입니다");
+    }
+
+    @Override
+    public void checkEmail(String email) {
+        boolean checkEmail = memberMapper.checkEmail(email);
+
+        if(checkEmail) throw new RuntimeException("해당 이메일은 이미 사용중입니다.");
     }
 }

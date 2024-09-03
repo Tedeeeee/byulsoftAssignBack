@@ -8,4 +8,5 @@ import project.assign.dto.MemberDTO;
 public interface MemberMapper {
     void save(Member member);
     boolean checkNickName(String nickName);
+    boolean checkEmail(String email);
 }
