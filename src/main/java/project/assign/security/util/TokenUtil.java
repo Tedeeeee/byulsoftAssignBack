@@ -1,10 +1,8 @@
 package project.assign.security.util;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +20,7 @@ public class TokenUtil {
     @Value("${jwt.secret.key}")
     private String secretKey;
     private static final String ACCESS_TOKEN_SUBJECT = "AccessToken";
+    private static final String BEARER = "Bearer ";
 
     public String createAccessToken(String memberEmail) {
         JwtBuilder builder = Jwts.builder()
@@ -80,5 +79,34 @@ public class TokenUtil {
         response.setHeader("AccessToken", accessToken);
 
         log.info("Access token 데이터 전송 완료: {}", accessToken);
+    }
+
+    public String getMemberEmailFromToken(String token) {
+        Claims claims = getClaimsFromToken(token);
+        return claims.get("memberEmail").toString();
+    }
+
+    public Optional<String> extractAccessToken(HttpServletRequest request) {
+        return Optional.ofNullable(request.getHeader("AccessToken"))
+                .filter(accessToken -> accessToken.startsWith(BEARER))
+                .map(accessToken -> accessToken.replace(BEARER, ""));
+    }
+
+    public boolean isValidToken(String token) {
+        try {
+            Claims claims = getClaimsFromToken(token);
+            log.info("expireTime : " + claims.getExpiration());
+
+            return true;
+        } catch (ExpiredJwtException exception) {
+            log.error("만료된 JWT 토큰입니다");
+            return false;
+        } catch (JwtException exception) {
+            log.error("토큰에 문제가 있습니다.");
+            return false;
+        } catch (NullPointerException exception) {
+            log.error("토큰이 존재하지 않습니다");
+            return false;
+        }
     }
 }

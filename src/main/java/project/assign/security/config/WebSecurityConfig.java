@@ -14,6 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import project.assign.repository.MemberMapper;
 import project.assign.security.filter.CustomAuthenticationFilter;
+import project.assign.security.filter.JwtAuthenticationFilter;
 import project.assign.security.handler.CustomAuthenticationSuccessHandler;
 import project.assign.security.provider.CustomAuthenticationProvider;
 import project.assign.security.service.CustomUserDetailService;
@@ -75,5 +76,10 @@ public class WebSecurityConfig {
         customAuthenticationFilter.setAuthenticationSuccessHandler(customAuthenticationSuccessHandler());
         customAuthenticationFilter.afterPropertiesSet();
         return customAuthenticationFilter;
+    }
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(tokenUtil, memberMapper);
     }
 }
