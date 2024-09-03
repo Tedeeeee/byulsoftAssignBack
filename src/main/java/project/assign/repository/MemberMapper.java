@@ -7,4 +7,5 @@ import project.assign.dto.MemberDTO;
 @Mapper
 public interface MemberMapper {
     void save(Member member);
+    boolean checkNickName(String nickName);
 }

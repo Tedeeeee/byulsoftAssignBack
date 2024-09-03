@@ -31,4 +31,11 @@ public class MemberServiceImpl implements MemberService{
         }
         return 1;
     }
+
+    @Override
+    public void checkNickName(String nickName) {
+        boolean checkNickName = memberMapper.checkNickName(nickName);
+
+        if(checkNickName) throw new RuntimeException("이미 존재하는 닉네임 입니다");
+    }
 }

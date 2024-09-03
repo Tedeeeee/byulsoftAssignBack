@@ -8,4 +8,10 @@
         INSERT INTO Member(email, password, nickName, name, phoneNumber)
         values (#{email}, #{password}, #{nickName}, #{name}, #{phoneNumber})
     </insert>
+
+    <select id="checkNickName" resultType="java.lang.Boolean">
+        select case when count(*) > 0 then true else false end
+        FROM member
+        where nickName = #{nickName}
+    </select>
 </mapper>
