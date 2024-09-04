@@ -13,7 +13,7 @@ import project.assign.repository.MemberMapper;
 public class MemberServiceImpl implements MemberService{
 
     private final MemberMapper memberMapper;
-    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final MemberPasswordEncoder memberPasswordEncoder;
 
     @Transactional
     @Override
@@ -23,7 +23,7 @@ public class MemberServiceImpl implements MemberService{
         // 즉, 프론트에서 true, false 를 통해 이메일과 닉네임의 체크가 종료되어야만 해당 API가 실행된다고 본다.
         Member member = Member.builder()
                 .email(memberDto.getEmail())
-                .password(bCryptPasswordEncoder.encode(memberDto.getPassword()))
+                .password(memberPasswordEncoder.encode(memberDto.getPassword()))
                 .nickName(memberDto.getNickName())
                 .name(memberDto.getName())
                 .phoneNumber(memberDto.getPhoneNumber())
