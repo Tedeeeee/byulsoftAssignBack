@@ -18,13 +18,14 @@ public class MemberServiceImpl implements MemberService{
     @Transactional
     @Override
     public int registerMember(MemberDTO memberDto) {
-        // 중요한 것은 프론트에서 이메일과 닉네임의 체크를 꼭 해야 한다는 것이다.
-        // 이후의 일은 무조건 체크가 끝났다는 전제하로 진행된다는 것이다.
-        // 즉, 프론트에서 true, false 를 통해 이메일과 닉네임의 체크가 종료되어야만 해당 API가 실행된다고 본다.
+        // 중복체크가 끝났지만 혹시 모를 위험상황을 대비해서 다시 제작
+        checkEmail(memberDto.getEmail());
+        checkNickName(memberDto.getNickname());
+
         Member member = Member.builder()
                 .email(memberDto.getEmail())
                 .password(memberPasswordEncoder.encode(memberDto.getPassword()))
-                .nickName(memberDto.getNickName())
+                .nickname(memberDto.getNickname())
                 .name(memberDto.getName())
                 .phoneNumber(memberDto.getPhoneNumber())
                 .build();

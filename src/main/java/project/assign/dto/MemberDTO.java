@@ -14,11 +14,11 @@ public class MemberDTO {
     private String email;
 
     @NotNull
-    @Pattern(regexp = "^(?=.*[A-Z])(?=.*[!@#$%^*+=-]).{8,}$", message = "비밀번호는 대문자와 지정된 특수문자를 최소 하나씩 포함하고, 8글자 이상이어야 합니다")
+    @Pattern(regexp = "^(?=.*[A-Z])(?=.*[!@#$%^*+=-]).{6,}$", message = "비밀번호는 대문자와 지정된 특수문자를 최소 하나씩 포함하고, 6글자 이상이어야 합니다")
     private String password;
 
     @NotNull(message = "닉네임을 작성해주세요")
-    private String nickName;
+    private String nickname;
 
     @NotNull(message = "이름을 작성해주세요")
     private String name;

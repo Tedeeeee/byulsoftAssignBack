@@ -5,15 +5,15 @@
 
 <mapper namespace="project.assign.repository.MemberMapper">
     <insert id="save" parameterType="project.assign.Entity.Member">
-        INSERT INTO Member(email, password, nickName, name, phoneNumber)
-        values (#{email}, #{password}, #{nickName}, #{name}, #{phoneNumber})
+        INSERT INTO Member(email, password, nickname, name, phone_number)
+        values (#{email}, #{password}, #{nickname}, #{name}, #{phoneNumber})
     </insert>
 
     <select id="checkNickName" resultType="java.lang.Boolean">
         select exists(
             select 1
             from member
-            where nickName = #{nickName}
+            where nickname = #{nickname}
         );
     </select>
 

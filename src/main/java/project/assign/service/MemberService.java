@@ -6,7 +6,7 @@ import project.assign.dto.MemberDTO;
 public interface MemberService {
 
     int registerMember(MemberDTO memberDto);
-    void checkNickName(String nickName);
+    void checkNickName(String nickname);
     void checkEmail(String email);
 
 }
