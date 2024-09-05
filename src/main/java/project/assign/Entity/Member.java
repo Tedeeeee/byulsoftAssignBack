@@ -12,5 +12,6 @@ public class Member {
     private String nickname;
     private String name;
     private String phoneNumber;
+    private String refreshToken;
 }
 

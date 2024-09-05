@@ -12,7 +12,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import project.assign.Entity.Member;
 
 public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
-    public CustomAuthenticationFilter(AuthenticationManager authenticationManager) {
+    private final ObjectMapper objectMapper;
+
+    public CustomAuthenticationFilter(AuthenticationManager authenticationManager, ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
         super.setAuthenticationManager(authenticationManager);
     }
 
@@ -30,7 +33,6 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
     private UsernamePasswordAuthenticationToken getAuthRequest(HttpServletRequest request) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
             Member member = objectMapper.readValue(request.getInputStream(), Member.class);
 
             return new UsernamePasswordAuthenticationToken(member.getEmail(), member.getPassword());

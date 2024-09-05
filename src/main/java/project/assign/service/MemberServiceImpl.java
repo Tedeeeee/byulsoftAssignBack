@@ -1,7 +1,7 @@
 package project.assign.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.assign.Entity.Member;
@@ -18,7 +18,6 @@ public class MemberServiceImpl implements MemberService{
     @Transactional
     @Override
     public int registerMember(MemberDTO memberDto) {
-        // 중복체크가 끝났지만 혹시 모를 위험상황을 대비해서 다시 제작
         checkEmail(memberDto.getEmail());
         checkNickName(memberDto.getNickname());
 
@@ -32,7 +31,7 @@ public class MemberServiceImpl implements MemberService{
         try {
             memberMapper.save(member);
         } catch (Exception e) {
-            throw new RuntimeException("잘못된 입력이 존재합니다", e);
+            throw new RuntimeException(e);
         }
         return 1;
     }

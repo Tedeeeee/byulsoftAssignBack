@@ -16,12 +16,9 @@ public class CustomUserDetailService implements UserDetailsService {
     private final MemberMapper memberMapper;
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Member member = memberMapper.findByEmail(email);
-
-        if (member == null) {
-            throw new UsernameNotFoundException("존재하지 않는 회원입니다");
-        }
+    public UserDetails loadUserByUsername(String email) {
+        Member member = memberMapper.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 회원입니다"));
 
         return User.builder()
                 .username(member.getEmail())

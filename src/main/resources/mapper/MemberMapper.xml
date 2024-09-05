@@ -26,8 +26,14 @@
     </select>
 
     <select id="findByEmail" resultType="project.assign.Entity.Member">
-        select *
+        select id, password, name, email, phone_number
         from member
         where email = #{email}
     </select>
+
+    <update id="saveRefreshToken">
+        update member
+        set refresh_token = #{refreshToken}
+        where email = #{email}
+    </update>
 </mapper>

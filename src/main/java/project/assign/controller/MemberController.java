@@ -16,7 +16,6 @@ public class MemberController {
 
     @PostMapping("/register")
     public ResponseEntity<Integer> register(@RequestBody @Valid MemberDTO memberDTO) {
-        System.out.println("회원가입 시작");
         int result = memberService.registerMember(memberDTO);
         return ResponseEntity.ok(result);
     }
