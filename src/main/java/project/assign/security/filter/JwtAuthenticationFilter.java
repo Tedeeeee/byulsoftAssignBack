@@ -32,10 +32,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     // 인가를 필요로 하지 않는 요청
     private static final List<Pattern> EXCLUDE_PATTERNS = Collections.unmodifiableList(Arrays.asList(
-            Pattern.compile("/login"),
-            Pattern.compile("/members/checkEmail"),
-            Pattern.compile("/members/checkNickName"),
-            Pattern.compile("/members/register")
+            Pattern.compile("/api/login"),
+            Pattern.compile("/api/members/checkEmail"),
+            Pattern.compile("/api/members/checkNickName"),
+            Pattern.compile("/api/members/register")
     ));
 
     @Override
@@ -45,19 +45,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String token = tokenOption.orElseThrow(() -> new RuntimeException("토큰이 존재하지 않습니다."));
             if (tokenUtil.isValidToken(token)) {
-                String emailOption = tokenUtil.getMemberEmailFromToken(token);
-                if (emailOption == null) {
-                    throw new RuntimeException("유저의 정보가 맞지 않습니다");
-                } else {
-                    // 멤버의 email을 통한 정보 찾기
-                    Member member = memberMapper.findByEmail(emailOption);
-                    if (member != null) {
-                        saveAuthentication(member);
-                        filterChain.doFilter(request, response);
-                    }
-                }
-            } else {
-                throw new RuntimeException("토큰이 유효하지 않습니다");
+                String memberEmail = tokenUtil.getMemberEmailFromToken(token);
+                // memberMapper가 아닌 Service로 변경하고 사용자가 없다면 예외처리 진행
+                Member member = memberMapper.findByEmail(memberEmail);
+                saveAuthentication(member);
+                filterChain.doFilter(request, response);
             }
         } catch (Exception e) {
             response.setCharacterEncoding("UTF-8");

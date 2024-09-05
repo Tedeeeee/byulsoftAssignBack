@@ -8,7 +8,7 @@ import project.assign.dto.MemberDTO;
 import project.assign.service.MemberService;
 
 @RestController
-@RequestMapping("/members")
+@RequestMapping("/api/members")
 @RequiredArgsConstructor
 public class MemberController {
 
@@ -33,4 +33,8 @@ public class MemberController {
         return ResponseEntity.ok("사용 가능한 이메일입니다.");
     }
 
+    @GetMapping("/healthCheck")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("헬스 체크 완료");
+    }
 }

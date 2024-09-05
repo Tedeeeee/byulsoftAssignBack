@@ -1,14 +1,20 @@
 package project.assign.security.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.security.Key;
 import java.util.*;
 
@@ -40,10 +46,10 @@ public class TokenUtil {
         return header;
     }
 
-    private static Map<String, String> createClaims(String memberUUID) {
+    private static Map<String, String> createClaims(String memberEmail) {
         Map<String, String> claims = new HashMap<>();
 
-        claims.put("memberUUID", memberUUID);
+        claims.put("memberEmail", memberEmail);
         return claims;
     }
 
@@ -72,24 +78,41 @@ public class TokenUtil {
         }
     }
 
-    public void sendAccessToken(HttpServletResponse response, String accessToken) {
-        response.setStatus(HttpServletResponse.SC_OK);
+    public void sendAccessToken(HttpServletResponse response, String accessToken, String nickname) throws IOException {
+        ResponseCookie cookie = ResponseCookie.from(ACCESS_TOKEN_SUBJECT, accessToken)
+                .secure(false)
+                .httpOnly(true)
+                .path("/")
+                .maxAge(3600)
+                .build();
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.setHeader("AccessToken", accessToken);
+        response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String userNickname = objectMapper.writeValueAsString(nickname);
+        response.getWriter().write(userNickname);
 
         log.info("Access token 데이터 전송 완료: {}", accessToken);
     }
 
     public String getMemberEmailFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
+        if(claims == null) {
+            throw new RuntimeException("토큰에 유저 정보가 존재하지 않습니다");
+        }
         return claims.get("memberEmail").toString();
     }
 
     public Optional<String> extractAccessToken(HttpServletRequest request) {
-        return Optional.ofNullable(request.getHeader("AccessToken"))
-                .filter(accessToken -> accessToken.startsWith(BEARER))
-                .map(accessToken -> accessToken.replace(BEARER, ""));
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            return Arrays.stream(cookies)
+                    .filter(cookie -> ACCESS_TOKEN_SUBJECT.equals(cookie.getName()))
+                    .map(Cookie::getValue)
+                    .findFirst();
+        }
+        return Optional.empty();
     }
 
     public boolean isValidToken(String token) {
@@ -109,4 +132,5 @@ public class TokenUtil {
             return false;
         }
     }
+
 }
