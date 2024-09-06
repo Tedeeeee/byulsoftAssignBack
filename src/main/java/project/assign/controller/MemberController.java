@@ -34,6 +34,7 @@ public class MemberController {
 
     @GetMapping("/healthCheck")
     public ResponseEntity<String> healthCheck() {
+        System.out.println("들어오는가?");
         return ResponseEntity.ok("헬스 체크 완료");
     }
 }

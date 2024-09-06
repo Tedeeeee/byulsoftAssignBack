@@ -24,16 +24,23 @@ public class TokenUtil {
     private final ObjectMapper objectMapper;
 
     // 토큰 전달
-    public void sendAccessToken(HttpServletResponse response, String accessToken, String nickname) throws IOException {
-        ResponseCookie cookie = ResponseCookie.from(TokenService.ACCESS_TOKEN_SUBJECT, accessToken)
-                .secure(false)
+    public void sendTokens(HttpServletResponse response, String accessToken, String refreshToken, String nickname) throws IOException {
+        ResponseCookie accessCookie = ResponseCookie.from(TokenService.ACCESS_TOKEN_SUBJECT, accessToken)
                 .httpOnly(true)
                 .path("/")
                 .maxAge(3600)
                 .build();
+
+        ResponseCookie refreshCookie = ResponseCookie.from(TokenService.REFRESH_TOKEN_SUBJECT, refreshToken)
+                .httpOnly(true)
+                .path("/")
+                .maxAge(604800)
+                .build();
+
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
         String userNickname = objectMapper.writeValueAsString(nickname);
         response.getWriter().write(userNickname);
@@ -58,11 +65,11 @@ public class TokenUtil {
     }
 
     // request 토큰 추출
-    public Optional<String> extractAccessToken(HttpServletRequest request) {
+    public Optional<String> extractToken(HttpServletRequest request, String tokenName) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             return Arrays.stream(cookies)
-                    .filter(cookie -> TokenService.ACCESS_TOKEN_SUBJECT.equals(cookie.getName()))
+                    .filter(cookie -> tokenName.equals(cookie.getName()))
                     .map(Cookie::getValue)
                     .findFirst();
         }

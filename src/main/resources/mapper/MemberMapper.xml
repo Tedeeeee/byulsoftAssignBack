@@ -26,9 +26,15 @@
     </select>
 
     <select id="findByEmail" resultType="project.assign.Entity.Member">
-        select id, password, name, email, phone_number
+        select id, password, name, email, phone_number as phoneNumber, nickName
         from member
         where email = #{email}
+    </select>
+
+    <select id="findByRefreshToken" resultType="java.lang.String">
+        select email
+        from member
+        where refresh_token = #{refreshToken};
     </select>
 
     <update id="saveRefreshToken">

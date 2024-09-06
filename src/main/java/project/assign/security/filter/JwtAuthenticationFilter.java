@@ -46,35 +46,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
-            String token = tokenUtil.extractAccessToken(request)
+            String token = tokenUtil.extractToken(request, "AccessToken")
                     .orElseThrow(() -> new RuntimeException("토큰이 존재하지 않습니다"));
 
-            // refreshToken을 해석하기위해 해당 토큰의 사용자 정보를 먼저 빼낸다.
-            String memberEmail = tokenUtil.getMemberEmailFromToken(token);
-            Member member = memberCheck.findByEmail(memberEmail);
-
-            // AccessToken 만료 X
+            // - AccessToken의 유효성 체크
+            // 2. 유효성이 정상일 경우
             if (tokenUtil.isValidToken(token)) {
-                //Member member = memberService.findByEmail(memberEmail);
+                String memberEmail = tokenUtil.getMemberEmailFromToken(token);
+                Member member = memberCheck.findByEmail(memberEmail);
                 saveAuthentication(member);
-                filterChain.doFilter(request, response);
             }
-            // AccessToken 만료
+            // 1-1. 유효성이 비정상일 경우
             else {
-                // refreshToken 만료시간 확인
-                // 1. member.getRefreshToken을 통해 토큰을 가져온다.
-                String refreshToken = member.getRefreshToken();
-                // 2. 가져온 토큰의 만료시간을 확인한다.
+                // refreshToken을 확인하고 사용자 DB의 refreshToken과 비교한다
+                String refreshToken = tokenUtil.extractToken(request, "RefreshToken")
+                        .orElseThrow(() -> new RuntimeException("refreshToken이 존재하지 않습니다"));
+
+                // member의 토큰을 검증
+                // 유효성 검증
                 if (tokenUtil.isValidToken(refreshToken)) {
-                    // 3. 만료시간이 지나지 않았다면 새로운 토큰을 발급하고 종료
-                    String accessToken = tokenService.createAccessToken(member.getEmail());
-                    tokenUtil.sendAccessToken(response, accessToken, member.getNickname());
-                }
-                // 4. 지났다면 재로그인 진행
-                else {
-                    throw new RuntimeException("로그인을 다시 진행해주세요");
+                    String memberEmail = memberCheck.findByRefreshToken(refreshToken);
+                    Member member = memberCheck.findByEmail(memberEmail);
+
+                    // 사용자의 refreshToken이 정확하다면 accessToken과 refreshToken 다시 제작
+                    String accessToken = tokenService.createAccessToken(memberEmail);
+                    String resetRefreshToken = tokenService.createRefreshToken(memberEmail);
+
+                    // 사용자의 refreshToken을 다시 저장하고 AccessToken과 refreshToken을 다시 전달한다
+                    memberCheck.saveRefreshToken(resetRefreshToken, memberEmail);
+                    tokenUtil.sendTokens(response, accessToken, resetRefreshToken, member.getNickname());
                 }
             }
+            filterChain.doFilter(request, response);
         } catch (Exception e) {
             response.setCharacterEncoding("UTF-8");
             response.setContentType("application/json");
@@ -125,6 +128,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String servletPath = request.getServletPath();
+        System.out.println(servletPath);
         return EXCLUDE_PATTERNS.stream().anyMatch(pattern -> pattern.matcher(servletPath).matches());
     }
 }

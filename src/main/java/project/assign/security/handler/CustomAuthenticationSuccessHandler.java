@@ -27,12 +27,14 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         String memberEmail = extractUsername(authentication);
         String accessToken = tokenService.createAccessToken(memberEmail);
+        String refreshToken = tokenService.createRefreshToken(memberEmail);
 
         //Member member = memberService.findByEmail(memberEmail);
+        // 이슈 : AccessToken이 만료되는 시점에서 더 이상 claim조차 확인이 불가능하기 때문에 refreshToken을 요청해야 한다.
         Member member = memberCheck.findByEmail(memberEmail);
-        tokenUtil.sendAccessToken(response, accessToken, member.getNickname());
+        tokenUtil.sendTokens(response, accessToken, refreshToken, member.getNickname());
+
         // refreshToken 을 저장하는 로직이 필요
-        String refreshToken = tokenService.createRefreshToken(memberEmail);
         memberCheck.saveRefreshToken(refreshToken, memberEmail);
 
         log.info("로그인에 성공하였습니다. memberEmail : {}", memberEmail);
