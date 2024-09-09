@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="project.assign.repository.BoardMapper">
+
+    <resultMap id="boardMap" type="project.assign.entity.Board">
+        <result column="id" property="boardId" />
+        <result column="member_id" property="memberId" />
+        <result column="difficulty_star" property="difficultyStar" />
+        <result column="horror_star" property="horrorStar" />
+        <result column="interior_star" property="interiorStar" />
+        <result column="activity_star" property="activityStar" />
+        <result column="story_star" property="storyStar" />
+    </resultMap>
+
+    <insert id="boardSave" parameterType="project.assign.entity.Board">
+        insert into board
+        (
+        member_id,
+         title,
+         region,
+         contents,
+         difficulty,
+         difficulty_star,
+        horror,
+         horror_star,
+         interior,
+         interior_star,
+         activity,
+         activity_star,
+        story,
+         story_star,
+         view,
+         likes
+        )
+        values
+        (
+             #{memberId},
+         #{title},
+         #{region},
+         #{contents},
+         #{difficulty},
+         #{difficultyStar},
+             #{horror},
+         #{horrorStar},
+         #{interior},
+         #{interiorStar},
+         #{activity},
+         #{activityStar},
+             #{story},
+         #{storyStar},
+         0,
+         0
+         )
+    </insert>
+
+    <select id="getAllBoard" resultMap="boardMap">
+        SELECT id,
+               member_id,
+               title,
+               region,
+               difficulty_star,
+               horror_star,
+               interior_star,
+               activity_star,
+               story_star,
+                likes,
+               view
+        FROM board
+    </select>
+
+    <select id="findByBoardId" resultMap="boardMap">
+        select id,
+               member_id,
+               title,
+               contents,
+               region,
+               difficulty,
+               difficulty_star,
+               horror,
+               horror_star,
+               interior,
+               interior_star,
+               activity,
+               activity_star,
+               story,
+               story_star,
+               likes,
+            view
+        from board
+        where id = #{id};
+    </select>
+</mapper>

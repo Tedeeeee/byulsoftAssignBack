@@ -1,4 +1,4 @@
-package project.assign.Entity;
+package project.assign.entity;
 
 import lombok.*;
 
@@ -7,6 +7,7 @@ import lombok.*;
 @Getter
 @Builder
 public class Member {
+    private int id;
     private String email;
     private String password;
     private String nickname;

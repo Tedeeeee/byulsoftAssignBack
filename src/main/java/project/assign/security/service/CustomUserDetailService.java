@@ -6,7 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import project.assign.Entity.Member;
+import project.assign.entity.Member;
 import project.assign.repository.MemberMapper;
 
 @Service
@@ -17,7 +17,7 @@ public class CustomUserDetailService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) {
-        Member member = memberMapper.findByEmail(email)
+        Member member = memberMapper.findMemberByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 회원입니다"));
 
         return User.builder()

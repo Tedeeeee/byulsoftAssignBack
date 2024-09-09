@@ -16,6 +16,7 @@ import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import project.assign.repository.MemberMapper;
 import project.assign.security.filter.CustomAuthenticationFilter;
 import project.assign.security.filter.JwtAuthenticationFilter;
 import project.assign.security.handler.CustomAuthenticationSuccessHandler;
@@ -38,9 +39,10 @@ public class WebSecurityConfig {
     private final ObjectMapper objectMapper;
     private final TokenUtil tokenUtil;
     private final TokenService tokenService;
-    private final MemberCheck memberCheck;
+    //private final MemberCheck memberCheck;
     //private final MemberService memberService;
     //private final MemberPasswordEncoder memberPasswordEncoder;
+    private final MemberMapper memberMapper;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -81,7 +83,7 @@ public class WebSecurityConfig {
 
     @Bean
     public CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler() {
-        return new CustomAuthenticationSuccessHandler(memberCheck, tokenUtil, tokenService);
+        return new CustomAuthenticationSuccessHandler(memberMapper, tokenUtil, tokenService);
     }
 
     @Bean
@@ -95,7 +97,7 @@ public class WebSecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(tokenUtil, memberCheck, tokenService);
+        return new JwtAuthenticationFilter(tokenUtil, tokenService, memberMapper);
     }
 
     @Bean

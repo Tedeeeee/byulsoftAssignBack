@@ -4,7 +4,13 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="project.assign.repository.MemberMapper">
-    <insert id="save" parameterType="project.assign.Entity.Member">
+
+    <resultMap id="memberMap" type="project.assign.entity.Member">
+        <result column="phone_number" property="phoneNumber"/>
+        <result column="refresh_token" property="refreshToken"/>
+    </resultMap>
+
+    <insert id="save" parameterType="project.assign.entity.Member">
         INSERT INTO Member(email, password, nickname, name, phone_number)
         values (#{email}, #{password}, #{nickname}, #{name}, #{phoneNumber})
     </insert>
@@ -25,8 +31,20 @@
         );
     </select>
 
-    <select id="findByEmail" resultType="project.assign.Entity.Member">
-        select id, password, name, email, phone_number as phoneNumber, nickName
+    <select id="findMemberIdByNickname" resultType="java.lang.Integer">
+        select id
+        from member
+        where nickname = #{nickname}
+    </select>
+
+    <select id="findNicknameById" resultType="java.lang.String">
+        select nickname
+        from member
+        where id = #{id}
+    </select>
+
+    <select id="findMemberByEmail" resultMap="memberMap">
+        select id, password, name, email, phone_number, nickName
         from member
         where email = #{email}
     </select>

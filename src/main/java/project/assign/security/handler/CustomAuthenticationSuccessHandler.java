@@ -7,11 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
-import project.assign.Entity.Member;
+import project.assign.entity.Member;
+import project.assign.repository.MemberMapper;
 import project.assign.security.service.TokenService;
 import project.assign.security.util.TokenUtil;
-import project.assign.service.MemberCheck;
-import project.assign.service.MemberService;
 
 import java.io.IOException;
 
@@ -19,7 +18,8 @@ import java.io.IOException;
 @Slf4j
 public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     //private final MemberService memberService;
-    private final MemberCheck memberCheck;
+    //private final MemberCheck memberCheck;
+    private final MemberMapper memberMapper;
     private final TokenUtil tokenUtil;
     private final TokenService tokenService;
 
@@ -31,11 +31,14 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         //Member member = memberService.findByEmail(memberEmail);
         // 이슈 : AccessToken이 만료되는 시점에서 더 이상 claim조차 확인이 불가능하기 때문에 refreshToken을 요청해야 한다.
-        Member member = memberCheck.findByEmail(memberEmail);
+        //Member member = memberCheck.findByEmail(memberEmail);
+        Member member = memberMapper.findMemberByEmail(memberEmail)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다"));
+
         tokenUtil.sendTokens(response, accessToken, refreshToken, member.getNickname());
 
         // refreshToken 을 저장하는 로직이 필요
-        memberCheck.saveRefreshToken(refreshToken, memberEmail);
+        memberMapper.saveRefreshToken(refreshToken, memberEmail);
 
         log.info("로그인에 성공하였습니다. memberEmail : {}", memberEmail);
         log.info("로그인에 성공하였습니다. AccessToken : {}", accessToken);

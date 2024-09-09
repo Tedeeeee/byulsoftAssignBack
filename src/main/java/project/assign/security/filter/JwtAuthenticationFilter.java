@@ -8,18 +8,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
-import project.assign.Entity.Member;
+import project.assign.entity.Member;
+import project.assign.repository.MemberMapper;
 import project.assign.security.service.TokenService;
 import project.assign.security.util.TokenUtil;
-import project.assign.service.MemberCheck;
-import project.assign.service.MemberService;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -31,16 +29,19 @@ import java.util.regex.Pattern;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final TokenUtil tokenUtil;
-    private final MemberCheck memberCheck;
+    //private final MemberCheck memberCheck;
     private final TokenService tokenService;
     //private final MemberService memberService;
+    private final MemberMapper memberMapper;
 
     // 인가를 필요로 하지 않는 요청
     private static final List<Pattern> EXCLUDE_PATTERNS = Collections.unmodifiableList(Arrays.asList(
             Pattern.compile("/api/login"),
             Pattern.compile("/api/members/checkEmail"),
             Pattern.compile("/api/members/checkNickName"),
-            Pattern.compile("/api/members/register")
+            Pattern.compile("/api/members/register"),
+            Pattern.compile("/api/board/allBoard"),
+            Pattern.compile("/api/board/detail/\\d+")
     ));
 
     @Override
@@ -53,7 +54,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 2. 유효성이 정상일 경우
             if (tokenUtil.isValidToken(token)) {
                 String memberEmail = tokenUtil.getMemberEmailFromToken(token);
-                Member member = memberCheck.findByEmail(memberEmail);
+                //Member member = memberCheck.findByEmail(memberEmail);
+                 Member member =memberMapper.findMemberByEmail(memberEmail)
+                        .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다"));
                 saveAuthentication(member);
             }
             // 1-1. 유효성이 비정상일 경우
@@ -65,15 +68,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // member의 토큰을 검증
                 // 유효성 검증
                 if (tokenUtil.isValidToken(refreshToken)) {
-                    String memberEmail = memberCheck.findByRefreshToken(refreshToken);
-                    Member member = memberCheck.findByEmail(memberEmail);
+                    String memberEmail = memberMapper.findByRefreshToken(refreshToken)
+                            .orElseThrow(() -> new RuntimeException("존재하지 않는 회원의 토큰입니다"));
+                    Member member =memberMapper.findMemberByEmail(memberEmail)
+                            .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다"));
 
                     // 사용자의 refreshToken이 정확하다면 accessToken과 refreshToken 다시 제작
                     String accessToken = tokenService.createAccessToken(memberEmail);
                     String resetRefreshToken = tokenService.createRefreshToken(memberEmail);
 
                     // 사용자의 refreshToken을 다시 저장하고 AccessToken과 refreshToken을 다시 전달한다
-                    memberCheck.saveRefreshToken(resetRefreshToken, memberEmail);
+                    memberMapper.saveRefreshToken(resetRefreshToken, memberEmail);
                     tokenUtil.sendTokens(response, accessToken, resetRefreshToken, member.getNickname());
                 }
             }

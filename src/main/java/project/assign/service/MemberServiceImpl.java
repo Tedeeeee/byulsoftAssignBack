@@ -1,10 +1,9 @@
 package project.assign.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.assign.Entity.Member;
+import project.assign.entity.Member;
 import project.assign.dto.MemberDTO;
 import project.assign.repository.MemberMapper;
 

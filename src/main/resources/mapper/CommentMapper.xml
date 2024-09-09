@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="project.assign.repository.CommentMapper">
+    <resultMap id="commentMap" type="project.assign.entity.Comment">
+        <result column="member_id" property="memberId"/>
+        <result column="board_id" property="boardId"/>
+    </resultMap>
+
+    <insert id="saveComment" parameterType="project.assign.entity.Comment">
+        insert into comment(member_id, board_id, content, nickname)
+        values (#{memberId}, #{boardId}, #{content}, #{nickname})
+    </insert>
+
+    <select id="findByBoardId" resultMap="commentMap">
+        select id,
+               member_id,
+               board_id,
+               content,
+               nickname
+        from comment
+        where board_id = #{boardId};
+    </select>
+
+</mapper>
