@@ -20,6 +20,7 @@ public class CustomUserDetailService implements UserDetailsService {
         Member member = memberMapper.findMemberByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 회원입니다"));
 
+        // 탈퇴한 회원을 구분지어야 할까?
         return User.builder()
                 .username(member.getEmail())
                 .password(member.getPassword())

@@ -8,11 +8,12 @@
     <resultMap id="memberMap" type="project.assign.entity.Member">
         <result column="phone_number" property="phoneNumber"/>
         <result column="refresh_token" property="refreshToken"/>
+        <result column="is_delete" property="isDelete"/>
     </resultMap>
 
-    <insert id="save" parameterType="project.assign.entity.Member">
-        INSERT INTO Member(email, password, nickname, name, phone_number)
-        values (#{email}, #{password}, #{nickname}, #{name}, #{phoneNumber})
+    <insert id="save" parameterType="project.assign.entity.Member" >
+        INSERT INTO Member(email, password, nickname, name, phone_number, is_delete)
+        values (#{email}, #{password}, #{nickname}, #{name}, #{phoneNumber}, false)
     </insert>
 
     <select id="checkNickName" resultType="java.lang.Boolean">
@@ -46,7 +47,7 @@
     <select id="findMemberByEmail" resultMap="memberMap">
         select id, password, name, email, phone_number, nickName
         from member
-        where email = #{email}
+        where email = #{email} and is_delete = 0
     </select>
 
     <select id="findByRefreshToken" resultType="java.lang.String">
@@ -59,5 +60,11 @@
         update member
         set refresh_token = #{refreshToken}
         where email = #{email}
+    </update>
+
+    <update id="deleteRefreshToken">
+        update member
+        set refresh_token = null
+        where email = #{memberEmail};
     </update>
 </mapper>

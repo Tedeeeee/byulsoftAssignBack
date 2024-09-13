@@ -14,5 +14,6 @@ public class Member {
     private String name;
     private String phoneNumber;
     private String refreshToken;
+    private boolean isDelete;
 }
 

@@ -38,51 +38,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final List<Pattern> EXCLUDE_PATTERNS = Collections.unmodifiableList(Arrays.asList(
             Pattern.compile("/api/login"),
             Pattern.compile("/api/members/checkEmail"),
-            Pattern.compile("/api/members/checkNickName"),
+            Pattern.compile("/api/members/checkNickname"),
             Pattern.compile("/api/members/register"),
-            Pattern.compile("/api/board/allBoard"),
-            Pattern.compile("/api/board/detail/\\d+")
+            Pattern.compile("/api/members/countPage"),
+            Pattern.compile("/api/boards/allBoard"),
+            Pattern.compile("/api/boards/sort"),
+            Pattern.compile("/api/boards/detail/\\d+")
     ));
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
-            String token = tokenUtil.extractToken(request, "AccessToken")
-                    .orElseThrow(() -> new RuntimeException("토큰이 존재하지 않습니다"));
+            Optional<String> accessTokenOptional = tokenUtil.extractToken(request, "AccessToken");
 
-            // - AccessToken의 유효성 체크
-            // 2. 유효성이 정상일 경우
-            if (tokenUtil.isValidToken(token)) {
-                String memberEmail = tokenUtil.getMemberEmailFromToken(token);
-                //Member member = memberCheck.findByEmail(memberEmail);
-                 Member member =memberMapper.findMemberByEmail(memberEmail)
-                        .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다"));
-                saveAuthentication(member);
+            if(accessTokenOptional.isPresent()) {
+                handleAccessToken(accessTokenOptional.get());
+            } else {
+                handleRefreshToken(request, response);
             }
-            // 1-1. 유효성이 비정상일 경우
-            else {
-                // refreshToken을 확인하고 사용자 DB의 refreshToken과 비교한다
-                String refreshToken = tokenUtil.extractToken(request, "RefreshToken")
-                        .orElseThrow(() -> new RuntimeException("refreshToken이 존재하지 않습니다"));
 
-                // member의 토큰을 검증
-                // 유효성 검증
-                if (tokenUtil.isValidToken(refreshToken)) {
-                    String memberEmail = memberMapper.findByRefreshToken(refreshToken)
-                            .orElseThrow(() -> new RuntimeException("존재하지 않는 회원의 토큰입니다"));
-                    Member member =memberMapper.findMemberByEmail(memberEmail)
-                            .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다"));
-
-                    // 사용자의 refreshToken이 정확하다면 accessToken과 refreshToken 다시 제작
-                    String accessToken = tokenService.createAccessToken(memberEmail);
-                    String resetRefreshToken = tokenService.createRefreshToken(memberEmail);
-
-                    // 사용자의 refreshToken을 다시 저장하고 AccessToken과 refreshToken을 다시 전달한다
-                    memberMapper.saveRefreshToken(resetRefreshToken, memberEmail);
-                    tokenUtil.sendTokens(response, accessToken, resetRefreshToken, member.getNickname());
-                }
-            }
             filterChain.doFilter(request, response);
+
         } catch (Exception e) {
             response.setCharacterEncoding("UTF-8");
             response.setContentType("application/json");
@@ -105,6 +81,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         Authentication authentication = new UsernamePasswordAuthenticationToken(userDetailsMember, null, null);
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+    private void handleAccessToken(String accessToken) {
+        if(tokenUtil.isValidToken(accessToken)) {
+            String memberEmail = tokenUtil.getMemberEmailFromToken(accessToken);
+            Member member = memberMapper.findMemberByEmail(memberEmail)
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다"));
+
+            saveAuthentication(member);
+        }
+    }
+
+    private void handleRefreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String refreshToken = tokenUtil.extractToken(request, "RefreshToken")
+                .orElseThrow(() -> new RuntimeException("refreshToken이 존재하지 않습니다"));
+
+        String memberEmail = memberMapper.findByRefreshToken(refreshToken)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 회원의 토큰입니다"));
+        Member member =memberMapper.findMemberByEmail(memberEmail)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다"));
+
+        // 사용자의 refreshToken이 정확하다면 accessToken과 refreshToken 다시 제작
+        String accessToken = tokenService.createAccessToken(memberEmail);
+        String resetRefreshToken = tokenService.createRefreshToken(memberEmail);
+
+        // 사용자의 refreshToken을 다시 저장하고 AccessToken과 refreshToken을 다시 전달한다
+        memberMapper.saveRefreshToken(resetRefreshToken, memberEmail);
+        tokenUtil.sendTokens(response, accessToken, resetRefreshToken, member.getNickname());
     }
 
     private JSONObject jsonResponseWrapper(Exception e) {

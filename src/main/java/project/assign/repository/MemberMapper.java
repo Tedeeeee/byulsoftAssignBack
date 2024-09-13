@@ -16,5 +16,5 @@ public interface MemberMapper {
     Optional<Member> findMemberByEmail(String email);
     void saveRefreshToken(@Param("refreshToken") String refreshToken,@Param("email") String email);
     Optional<String> findByRefreshToken(String refreshToken);
-
+    void deleteRefreshToken(String memberEmail);
 }

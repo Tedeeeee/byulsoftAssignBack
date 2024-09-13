@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="project.assign.repository.BoardStarMapper">
+    <resultMap id="boardStarMap" type="project.assign.entity.BoardStar">
+        <result column="board_id" property="boardId" />
+        <result column="star_type" property="starType" />
+        <result column="star_short_review" property="starShortReview" />
+        <result column="star_rating" property="starRating" />
+        <result column="sort_no" property="sortNo" />
+    </resultMap>
+
+
+    <insert id="boardStarSave" parameterType="project.assign.entity.BoardStar">
+        insert into board_star
+        (
+            board_id,
+         star_type,
+         star_short_review,
+         star_rating,
+            sort_no
+        ) values (
+            #{boardId},
+            #{starType},
+                  #{starShortReview},
+            #{starRating},
+                  #{sortNo}
+        )
+    </insert>
+
+    <update id="boardStarUpdate">
+        update board_star
+        set star_short_review = #{starShortReview},
+            star_rating = #{starRating}
+        where board_id = #{boardId} and star_type = #{starType}
+    </update>
+
+    <select id="getBoardStarByBoardId" resultMap="boardStarMap">
+        select board_id, star_type, star_short_review, star_rating
+        from board_star
+        where board_id = #{boardId}
+        order By sort_no
+    </select>
+
+    <select id="sortASCBoardIdByStarType" resultType="java.lang.Integer">
+        select board_id
+        from board_star
+        where star_type = #{typeName}
+        order by star_rating
+        limit 5 offset #{offset}
+    </select>
+
+    <select id="sortTest" resultType="project.assign.entity.BoardStar">
+        select board_star_id, board_id, star_type, star_short_review, star_rating, sort_no
+        from board_star
+        <choose>
+            <when test="typeName.equals('')">
+
+            </when>
+            <otherwise>
+                where star_type = #{typeName}
+            </otherwise>
+        </choose>
+        order by star_rating
+        limit 5 offset #{offset}
+    </select>
+
+    <select id="sortDESCBoardIdByStarType" resultType="java.lang.Integer">
+        select board_id
+        from board_star
+        where star_type = #{typeName}
+        order by star_rating desc
+        limit 5 offset #{offset}
+    </select>
+
+</mapper>

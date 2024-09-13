@@ -19,11 +19,11 @@ public class MemberDTO {
     private String password;
 
     @NotBlank(message = "닉네임을 작성해주세요")
-    @Size(max = 8, message = "닉네임은 8글자 이하로 작성해주세요")
+    @Size(max = 10, message = "닉네임은 10글자 이하로 작성해주세요")
     private String nickname;
 
     @NotBlank(message = "이름을 작성해주세요")
-    @Size(max = 5, message = "이름은 5글자 이하로 작성해주세요")
+    @Size(max = 18, message = "이름은 18글자 이하로 작성해주세요")
     private String name;
 
     @NotBlank(message = "핸드폰 번호를 입력해주세요")

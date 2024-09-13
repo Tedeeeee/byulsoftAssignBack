@@ -20,9 +20,9 @@ public class MemberController {
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/checkNickName")
-    public ResponseEntity<String> checkNickName(@RequestParam(name = "nickName") String nickName) {
-        memberService.checkNickName(nickName);
+    @GetMapping("/checkNickname")
+    public ResponseEntity<String> checkNickName(@RequestParam(name = "nickname") String nickname) {
+        memberService.checkNickname(nickname);
         return ResponseEntity.ok("사용 가능한 닉네임입니다.");
     }
 
@@ -30,6 +30,13 @@ public class MemberController {
     public ResponseEntity<String> checkEmail(@RequestParam(name = "email") String email) {
         memberService.checkEmail(email);
         return ResponseEntity.ok("사용 가능한 이메일입니다.");
+    }
+
+    // 로그아웃을 하면 시큐리티의 contextHolder 에 있는 정보를 삭제해야한다.
+    @PatchMapping("")
+    public ResponseEntity<Integer> deleteRefreshToken() {
+        int result = memberService.deleteRefreshToken();
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/healthCheck")

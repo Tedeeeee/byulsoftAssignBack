@@ -7,21 +7,48 @@
     <resultMap id="commentMap" type="project.assign.entity.Comment">
         <result column="member_id" property="memberId"/>
         <result column="board_id" property="boardId"/>
+        <result column="is_delete" property="isDelete"/>
     </resultMap>
 
     <insert id="saveComment" parameterType="project.assign.entity.Comment">
-        insert into comment(member_id, board_id, content, nickname)
-        values (#{memberId}, #{boardId}, #{content}, #{nickname})
+        insert into comment(member_id, board_id, content, nickname, is_delete)
+        values (#{memberId}, #{boardId}, #{content}, #{nickname}, false)
     </insert>
+
+    <select id="findByCommentId" resultMap="commentMap">
+        select id,
+               member_id,
+               board_id,
+               content,
+               nickname,
+               createdAt,
+               updatedAt
+        from comment
+        where id = #{commentId} and is_delete = 0;
+    </select>
 
     <select id="findByBoardId" resultMap="commentMap">
         select id,
                member_id,
                board_id,
                content,
-               nickname
+               nickname,
+               createdAt,
+               updatedAt
         from comment
-        where board_id = #{boardId};
+        where board_id = #{boardId} and is_delete = 0;
     </select>
+
+    <update id="deleteByCommentId">
+        update comment
+        set is_delete = true
+        where id = #{commentId};
+    </update>
+
+    <update id="changeComment">
+        update comment
+        set content = #{content}
+        where id = #{id}
+    </update>
 
 </mapper>

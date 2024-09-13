@@ -8,88 +8,132 @@
     <resultMap id="boardMap" type="project.assign.entity.Board">
         <result column="id" property="boardId" />
         <result column="member_id" property="memberId" />
-        <result column="difficulty_star" property="difficultyStar" />
-        <result column="horror_star" property="horrorStar" />
-        <result column="interior_star" property="interiorStar" />
-        <result column="activity_star" property="activityStar" />
-        <result column="story_star" property="storyStar" />
+        <result column="is_delete" property="isDelete"/>
+    </resultMap>
+    
+    <resultMap id="boardWithBoardStarMap" type="project.assign.entity.Board">
+        <id column="id" property="boardId"/>
+        <result column="member_id" property="memberId" />
+        <result column="title" property="title" />
+        <result column="contents" property="contents" />
+        <result column="region" property="region" />
+        <result column="view" property="view" />
+        <result column="likes" property="likes" />
+        <result column="createdAt" property="createdAt" />
+        <result column="updatedAt" property="updatedAt" />
+        <collection property="stars" ofType="project.assign.entity.BoardStar">
+            <id column="board_star_id" property="boardStarId"/>
+            <result column="board_id" property="boardId" />
+            <result column="star_type" property="starType" />
+            <result column="star_short_review" property="starShortReview" />
+            <result column="star_rating" property="starRating" />
+        </collection>
+
     </resultMap>
 
-    <insert id="boardSave" parameterType="project.assign.entity.Board">
+    <insert id="boardSave" parameterType="project.assign.entity.Board" useGeneratedKeys="true" keyProperty="boardId">
         insert into board
         (
-        member_id,
-         title,
-         region,
-         contents,
-         difficulty,
-         difficulty_star,
-        horror,
-         horror_star,
-         interior,
-         interior_star,
-         activity,
-         activity_star,
-        story,
-         story_star,
-         view,
-         likes
+            member_id,
+            title,
+            region,
+            contents,
+            view,
+            likes,
+            is_delete
+        ) values (
+            #{memberId},
+            #{title},
+            #{region},
+            #{contents},
+            0,
+            0,
+            false
         )
-        values
-        (
-             #{memberId},
-         #{title},
-         #{region},
-         #{contents},
-         #{difficulty},
-         #{difficultyStar},
-             #{horror},
-         #{horrorStar},
-         #{interior},
-         #{interiorStar},
-         #{activity},
-         #{activityStar},
-             #{story},
-         #{storyStar},
-         0,
-         0
-         )
     </insert>
 
-    <select id="getAllBoard" resultMap="boardMap">
-        SELECT id,
-               member_id,
-               title,
-               region,
-               difficulty_star,
-               horror_star,
-               interior_star,
-               activity_star,
-               story_star,
-                likes,
-               view
+    <update id="boardUpdate">
+        UPDATE board
+        SET title = #{title},
+            region = #{region},
+            contents = #{contents}
+        WHERE id = #{boardId};
+    </update>
+
+    <update id="deleteBoardById">
+        update board
+        set is_delete = true
+        where id = #{id};
+    </update>
+
+    <select id="boardPagination" resultType="java.lang.Integer">
+        SELECT id
         FROM board
+        where is_delete = 0
+        limit 5 offset #{offset}
+    </select>
+
+    <select id="countBoards" resultType="java.lang.Integer">
+        select count(id)
+        from board
+        where is_delete = 0
     </select>
 
     <select id="findByBoardId" resultMap="boardMap">
-        select id,
-               member_id,
-               title,
-               contents,
-               region,
-               difficulty,
-               difficulty_star,
-               horror,
-               horror_star,
-               interior,
-               interior_star,
-               activity,
-               activity_star,
-               story,
-               story_star,
-               likes,
+        select
+            id,
+            member_id,
+            title,
+            contents,
+            region,
+            likes,
+            createdAt,
+            updatedAt,
             view
         from board
-        where id = #{id};
+        where id = #{id} and is_delete = 0;
+    </select>
+
+    <select id="getBoardWithBoardStar" resultMap="boardWithBoardStarMap">
+        select b.id, b.member_id, b.title, b.contents, b.region, b.likes, b.view, b.createdAt, b.updatedAt,
+                bs.star_type, bs.star_short_review, bs.star_rating
+        from board b
+        join board_star bs on b.id = bs.board_id
+        where b.is_delete = 0 and b.id = ${boardId}
+        order by bs.sort_no
+    </select>
+
+    <select id="getTest" resultMap="boardWithBoardStarMap">
+        select b.id, b.member_id, b.title, b.contents, b.region, b.likes, b.view, b.createdAt, b.updatedAt,
+        bs.star_type, bs.star_short_review, bs.star_rating
+        from board b
+        join board_star bs on b.id = bs.board_id
+        where b.is_delete = 0 and b.id in
+        <foreach collection="list" item="arr" index="idx"
+                 open="(" separator="," close=")">
+            #{arr}
+        </foreach>
+        order by bs.sort_no
+    </select>
+
+    <select id="temp" resultMap="boardWithBoardStarMap">
+        select b.id, b.member_id, b.title, b.contents, b.region, b.likes, b.view, b.createdAt, b.updatedAt,
+               bs.star_type, bs.star_short_review, bs.star_rating
+        FROM BOARD b
+LEFT JOIN board_star bs
+    ON bs.board_id = b.id
+    <if test='!"id".equals(typeName)'>
+        AND bs.star_type =  #{typeName}
+    </if>
+    WHERE b.is_delete = 0
+    <choose>
+        <when test='!"id".equals(typeName)'>
+            ORDER BY bs.star_rating
+        </when>
+        <otherwise>
+            ORDER BY b.id desc
+        </otherwise>
+     </choose>
+    LIMIT 5 OFFSET #{pageOffset}
     </select>
 </mapper>

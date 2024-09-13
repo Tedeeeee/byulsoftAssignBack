@@ -59,7 +59,7 @@ public class TokenService {
 
     private Date createAccessTokenExpiredDate() {
         Calendar c = Calendar.getInstance();
-        c.add(Calendar.MINUTE, 2);
+        c.add(Calendar.HOUR, 6);
         return c.getTime();
     }
 
