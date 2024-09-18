@@ -7,10 +7,7 @@ import project.assign.dto.BoardRequestDTO;
 import project.assign.dto.BoardResponseDTO;
 import project.assign.dto.BoardStarDTO;
 import project.assign.dto.CommentDTO;
-import project.assign.entity.Board;
-import project.assign.entity.BoardStar;
-import project.assign.entity.BoardStarType;
-import project.assign.entity.Comment;
+import project.assign.entity.*;
 import project.assign.repository.BoardMapper;
 import project.assign.repository.BoardStarMapper;
 import project.assign.repository.CommentMapper;
@@ -39,21 +36,24 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public int saveBoard(BoardRequestDTO boardRequestDTO) {
-        int memberId = memberMapper.findMemberIdByNickname(boardRequestDTO.getNickname());
+        // 사용자 정보는 시큐리티를 통해 확인
+        Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다"));
 
         try {
-            // 보드를 먼저 저장하고
-            Board board = boardRequestDTO.toEntityByMemberId(memberId);
+            // 보드를 먼저 저장하고 key를 바로 반환
+            // useGeneratedKeys="true" keyProperty="boardId"
+            Board board = boardRequestDTO.toEntity(member.getMemberId());
             boardMapper.boardSave(board);
 
-            // 먼저 저장된 boardId를 가지고 각 boardStar들을 저장
             int boardId = board.getBoardId();
-            List<BoardStarDTO> boardStars = boardRequestDTO.getBoardStars();
 
-            // 불러온 값에는 boardId 와 sort_no가 존재하지 않기 때문에 만들어주어야 한다.
-            for (int i = 0; i < 5; i++) {
-                BoardStar entity = boardStars.get(i).toEntity(boardId, i + 1);
-                boardStarMapper.boardStarSave(entity);
+            // 먼저 저장된 boardId를 가지고 각 boardStar 들을 저장
+            List<BoardStarDTO> boardStars = boardRequestDTO.getBoardStars();
+            for (int i = 0; i < boardStars.size(); i++) {
+                // 불러온 값에는 boardId 와 sort_no가 존재하지 않기 때문에 만들어주어야 한다.
+                BoardStar boardStar = boardStars.get(i).toEntity(boardId, i + 1);
+                boardStarMapper.boardStarSave(boardStar);
             }
 
             return 1;
@@ -65,19 +65,34 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public int updateBoard(BoardRequestDTO boardRequestDTO) {
-        // 해당 게시글의 존재 유무 판단
-        Board findBoard = boardMapper.findByBoardId(boardRequestDTO.getId())
+        // 1. 수정하려는 게시글 존재 확인
+        Board findBoard = boardMapper.findByBoardId(boardRequestDTO.getBoardId())
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 게시글입니다"));
 
+        // 2. 사용자의 정보와 게시글에 저장된 사용자 정보 확인
+        Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다"));
+
+        if (member.getMemberId() != findBoard.getMemberId()) {
+            throw new RuntimeException("사용자의 정보가 일치하지 않습니다");
+        }
+
         try {
-            Board board = boardRequestDTO.toEntityByMemberId(findBoard.getMemberId());
+            // 해당 게시글을 수정하기 위한 새로운 board 객체
+            // 게시글을 수정하는 방법은 변경 체크가 아닌 모든것을 새롭게 데이터를 구성하기 때문에 put method 사용
+            Board board = boardRequestDTO.toEntity(member.getMemberId());
 
             // 변경된 데이터 보드에 먼저 update
             boardMapper.boardUpdate(board);
-            // 각 boardStar 관련 데이터 다시 저장
-            for (BoardStarDTO boardStar : boardRequestDTO.getBoardStars()) {
-                BoardStar entity = boardStar.toEntity(board.getBoardId(), board.getBoardId());
-                boardStarMapper.boardStarUpdate(entity);
+            // 각 boardStar 관련 데이터 다시 저장 -> 기존의 관련 boardStar를 모두 삭제하고 다시 저장
+            // 데이터의 일관성이 중요한 작업이기에 삭제 후 다시 저장으로 진행한다.
+            boardStarMapper.deleteBoardStarByBoardId(board.getBoardId());
+
+            // 별들을 다시 저장
+            List<BoardStarDTO> boardStars = boardRequestDTO.getBoardStars();
+            for (int i = 0; i < boardStars.size(); i++) {
+                BoardStar boardStar = boardStars.get(i).toEntity(board.getBoardId(), i + 1);
+                boardStarMapper.boardStarSave(boardStar);
             }
         } catch (Exception e) {
             throw new RuntimeException("수정 실패", e);
@@ -89,7 +104,8 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public int deleteBoard(int id) {
-        SecurityUtil.getCurrentMemberId();
+        memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다"));
 
         try {
             boardMapper.deleteBoardById(id);
@@ -99,99 +115,61 @@ public class BoardServiceImpl implements BoardService {
         }
     }
 
+    // 기본 정렬 ( 최신순 ) 게시글 가져오기
     @Override
     public List<BoardResponseDTO> getAllBoard(int pageNumber) {
-        System.out.println(SecurityUtil.getCurrentMemberId());
-
         // Board 테이블 페이징 하기
         int pageOffset = (pageNumber - 1) * 5;
-        List<Integer> boards = boardMapper.boardPagination(pageOffset);
+        List<Integer> boards = boardMapper.getBasicBoardList(pageOffset);
 
         List<BoardResponseDTO> boardResponseDTOList = new ArrayList<>();
         for (Integer boardId : boards) {
             // 각각의 페이징 된 데이터를 가져온다
-            Board getBoard = boardMapper.getBoardWithBoardStar(boardId);
+            Board board = boardMapper.findByBoardId(boardId)
+                    .orElseThrow(() -> new RuntimeException(boardId + "번의 작품은 존재하지 않습니다"));
 
-            String nickname = memberMapper.findNicknameById(getBoard.getMemberId())
-                    .orElseThrow(() -> new RuntimeException("회원이 존재하지 않습니다"));
-
-            List<Comment> comments = commentMapper.findByBoardId(boardId);
-            List<CommentDTO> commentList = comments.stream().map(CommentDTO::from).toList();
-
-            BoardResponseDTO from = BoardResponseDTO.from(getBoard, nickname, commentList);
+            BoardResponseDTO from = BoardResponseDTO.from(board, null);
             boardResponseDTOList.add(from);
         }
         return boardResponseDTOList;
     }
 
+    // 조건이 담긴 정렬의 서비스
     @Override
     public List<BoardResponseDTO> sortTypeBoard(String typeName, String sortType, int pageNum) {
         int pageOffset = (pageNum - 1) * 5;
-        List<Integer> boardIdList;
+        List<Integer> sortedBoardIdList;
         if (sortType.equals("asc")) {
-            boardIdList = boardStarMapper.sortASCBoardIdByStarType(typeName, pageOffset);
-        } else if(sortType.equals("desc")) {
-            boardIdList = boardStarMapper.sortDESCBoardIdByStarType(typeName, pageOffset);
-        } else {
-            boardIdList = boardMapper.boardPagination(pageOffset);
+            sortedBoardIdList = boardStarMapper.sortASCBoardIdByStarType(typeName, pageOffset);
+        } else  {
+            sortedBoardIdList = boardStarMapper.sortDESCBoardIdByStarType(typeName, pageOffset);
         }
 
-        List<Board> test = boardMapper.getTest(boardIdList);
+        List<Board> boardList = boardMapper.getBoardListBySortTest(sortedBoardIdList);
 
         List<BoardResponseDTO> boardResponseDTOList = new ArrayList<>();
 
-
-        for (Integer idxNum : boardIdList) {
-            for (Board board : test) {
+        for (Integer idxNum : sortedBoardIdList) {
+            for (Board board : boardList) {
                 if (board.getBoardId() == idxNum) {
-                    boardResponseDTOList.add(BoardResponseDTO.from(board, null, null));
+                    boardResponseDTOList.add(BoardResponseDTO.from(board, null));
                     break;
                 }
             }
         }
 
-        /**
-         * [2,1,3,5,4]
-         *
-         * [1(d),2(d),3(d),4(d),5(d)]
-         * cpu bound 빨ㄹ
-         * io bound 쿼리를 줄이고
-         */
-
-//        List<BoardResponseDTO> boardResponseDTOList = new ArrayList<>();
-//        for (Integer boardId : boardIdList) {
-//            // 각각의 페이징 된 데이터를 가져온다
-//            Board getBoard = boardMapper.getBoardWithBoardStar(boardId);
-//
-//            String nickname = memberMapper.findNicknameById(getBoard.getMemberId())
-//                    .orElseThrow(() -> new RuntimeException("회원이 존재하지 않습니다"));
-//
-//            List<Comment> comments = commentMapper.findByBoardId(boardId);
-//            List<CommentDTO> commentList = comments.stream().map(CommentDTO::from).toList();
-//
-//            BoardResponseDTO from = BoardResponseDTO.from(getBoard, nickname, commentList);
-//            boardResponseDTOList.add(from);
-//        }
-//
-
         return boardResponseDTOList;
     }
 
+    // 특정 게시글 가져오기 ( 댓글 같이 가져오기 )
     @Override
-    public BoardResponseDTO findByBoardId(int id) {
-        Board board = boardMapper.getBoardWithBoardStar(id);
-        String nickname = memberMapper.findNicknameById(board.getMemberId())
-                .orElseThrow(() -> new RuntimeException("회원이 존재하지 않습니다"));
+    public BoardResponseDTO findByBoardId(int boardId) {
+        Board board = boardMapper.findByBoardId(boardId)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 게시글입니다"));
 
-        // 댓글 가져오기
-        List<Comment> comments = commentMapper.findByBoardId(board.getBoardId());
-        List<CommentDTO> commentList = comments.stream().map(CommentDTO::from).toList();
+        Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다"));
 
-        List<BoardStar> boardStars = boardStarMapper.getBoardStarByBoardId(board.getBoardId());
-
-        return BoardResponseDTO.from(board, nickname, commentList);
-        //return Board.toDTO(board, nickname, commentList);
+        return BoardResponseDTO.from(board, member.getMemberNickname());
     }
-
-
 }

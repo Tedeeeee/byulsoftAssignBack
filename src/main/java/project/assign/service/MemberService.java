@@ -1,10 +1,10 @@
 package project.assign.service;
 
 
-import project.assign.dto.MemberDTO;
+import project.assign.dto.MemberRequestDTO;
 
 public interface MemberService {
-    int registerMember(MemberDTO memberDto);
+    int registerMember(MemberRequestDTO memberRequestDto);
 
     // 닉네임 중복 체크
 

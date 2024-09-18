@@ -15,13 +15,14 @@ import java.util.List;
 public class Board {
     private int boardId;
     private int memberId;
-    private String title;
-    private String contents;
-    private String region;
-    private int view;
-    private int likes;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private boolean isDelete;
+    private String boardTitle;
+    private String boardContent;
+    private String boardRegion;
+    private int boardView;
+    private int boardLikes;
+    private LocalDateTime boardCreatedAt;
+    private LocalDateTime boardUpdatedAt;
+    private boolean boardIsDelete;
     private List<BoardStar> stars;
+    private List<Comment> comments;
 }

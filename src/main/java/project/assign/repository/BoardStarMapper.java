@@ -8,14 +8,15 @@ import java.util.List;
 
 @Mapper
 public interface BoardStarMapper {
-    int boardStarSave(BoardStar boardStar);
-    int boardStarUpdate(BoardStar boardStar);
+    void boardStarSave(BoardStar boardStar);
+    void deleteBoardStarByBoardId(int boardId);
+    List<Integer>sortASCBoardIdByStarType(@Param("typeName") String boardStarType, @Param("offset") int offset);
+    List<Integer>sortDESCBoardIdByStarType(@Param("typeName") String boardStarType, @Param("offset") int offset);
+
+    void boardStarUpdate(BoardStar boardStar);
 
     List<BoardStar> getBoardStarByBoardId(int boardId);
 
-    List<Integer>sortASCBoardIdByStarType(@Param("typeName") String typeName, @Param("offset") int offset);
-
-    List<Integer>sortDESCBoardIdByStarType(@Param("typeName") String typeName, @Param("offset") int offset);
-
     List<BoardStar> sortTest(int boardId);
+
 }

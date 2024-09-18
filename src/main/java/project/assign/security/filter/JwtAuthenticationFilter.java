@@ -14,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
+import project.assign.dto.MemberResponseDTO;
 import project.assign.entity.Member;
 import project.assign.repository.MemberMapper;
 import project.assign.security.service.TokenService;
@@ -37,8 +38,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // 인가를 필요로 하지 않는 요청
     private static final List<Pattern> EXCLUDE_PATTERNS = Collections.unmodifiableList(Arrays.asList(
             Pattern.compile("/api/login"),
-            Pattern.compile("/api/members/checkEmail"),
-            Pattern.compile("/api/members/checkNickname"),
+            Pattern.compile("/api/members/emails/check"),
+            Pattern.compile("/api/members/nicknames/check"),
             Pattern.compile("/api/members/register"),
             Pattern.compile("/api/members/countPage"),
             Pattern.compile("/api/boards/allBoard"),
@@ -71,10 +72,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     public void saveAuthentication(Member member) {
-        String password = member.getPassword();
+        String password = member.getMemberPassword();
 
         UserDetails userDetailsMember = User.builder()
-                .username(member.getEmail())
+                .username(member.getMemberEmail())
                 .password(password)
                 .build();
 
@@ -96,7 +97,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String refreshToken = tokenUtil.extractToken(request, "RefreshToken")
                 .orElseThrow(() -> new RuntimeException("refreshToken이 존재하지 않습니다"));
 
-        String memberEmail = memberMapper.findByRefreshToken(refreshToken)
+        String memberEmail = memberMapper.findMemberByRefreshToken(refreshToken)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 회원의 토큰입니다"));
         Member member =memberMapper.findMemberByEmail(memberEmail)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다"));
@@ -107,7 +108,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 사용자의 refreshToken을 다시 저장하고 AccessToken과 refreshToken을 다시 전달한다
         memberMapper.saveRefreshToken(resetRefreshToken, memberEmail);
-        tokenUtil.sendTokens(response, accessToken, resetRefreshToken, member.getNickname());
+
+        MemberResponseDTO memberResponseDTO = new MemberResponseDTO();
+        MemberResponseDTO memberResponse = memberResponseDTO.from(member);
+        tokenUtil.sendTokens(response, accessToken, resetRefreshToken, memberResponseDTO);
     }
 
     private JSONObject jsonResponseWrapper(Exception e) {

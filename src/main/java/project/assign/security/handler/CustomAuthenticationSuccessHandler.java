@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import project.assign.dto.MemberResponseDTO;
 import project.assign.entity.Member;
 import project.assign.repository.MemberMapper;
 import project.assign.security.service.TokenService;
@@ -35,7 +36,10 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         Member member = memberMapper.findMemberByEmail(memberEmail)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다"));
 
-        tokenUtil.sendTokens(response, accessToken, refreshToken, member.getNickname());
+        MemberResponseDTO memberResponseDTO = new MemberResponseDTO();
+        MemberResponseDTO memberResponse = memberResponseDTO.from(member);
+
+        tokenUtil.sendTokens(response, accessToken, refreshToken, memberResponse);
 
         // refreshToken 을 저장하는 로직이 필요
         memberMapper.saveRefreshToken(refreshToken, memberEmail);

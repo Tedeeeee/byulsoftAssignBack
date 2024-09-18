@@ -12,9 +12,11 @@ public interface MemberMapper {
     boolean checkNickName(String nickName);
     boolean checkEmail(String email);
     Optional<String> findNicknameById(int id);
-    int findMemberIdByNickname(String nickName);
+    Optional<Integer> findMemberIdByNickname(String nickName);
     Optional<Member> findMemberByEmail(String email);
+    Optional<Member> findMemberById(int memberId);
+
     void saveRefreshToken(@Param("refreshToken") String refreshToken,@Param("email") String email);
-    Optional<String> findByRefreshToken(String refreshToken);
+    Optional<String> findMemberByRefreshToken(String refreshToken);
     void deleteRefreshToken(String memberEmail);
 }
