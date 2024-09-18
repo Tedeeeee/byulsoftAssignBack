@@ -16,6 +16,7 @@ import project.assign.util.SecurityUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -128,7 +129,11 @@ public class BoardServiceImpl implements BoardService {
             Board board = boardMapper.findByBoardId(boardId)
                     .orElseThrow(() -> new RuntimeException(boardId + "번의 작품은 존재하지 않습니다"));
 
-            BoardResponseDTO from = BoardResponseDTO.from(board, null);
+            String nickname = memberMapper.findNicknameById(board.getMemberId())
+                    .orElse("미상");
+
+
+            BoardResponseDTO from = BoardResponseDTO.from(board, nickname, null);
             boardResponseDTOList.add(from);
         }
         return boardResponseDTOList;
@@ -136,13 +141,13 @@ public class BoardServiceImpl implements BoardService {
 
     // 조건이 담긴 정렬의 서비스
     @Override
-    public List<BoardResponseDTO> sortTypeBoard(String typeName, String sortType, int pageNum) {
+    public List<BoardResponseDTO> sortTypeBoard(String sortOrder, String sortType, int pageNum) {
         int pageOffset = (pageNum - 1) * 5;
         List<Integer> sortedBoardIdList;
-        if (sortType.equals("asc")) {
-            sortedBoardIdList = boardStarMapper.sortASCBoardIdByStarType(typeName, pageOffset);
+        if (sortOrder.equals("asc")) {
+            sortedBoardIdList = boardStarMapper.sortASCBoardIdByStarType(sortType, pageOffset);
         } else  {
-            sortedBoardIdList = boardStarMapper.sortDESCBoardIdByStarType(typeName, pageOffset);
+            sortedBoardIdList = boardStarMapper.sortDESCBoardIdByStarType(sortType, pageOffset);
         }
 
         List<Board> boardList = boardMapper.getBoardListBySortTest(sortedBoardIdList);
@@ -152,7 +157,11 @@ public class BoardServiceImpl implements BoardService {
         for (Integer idxNum : sortedBoardIdList) {
             for (Board board : boardList) {
                 if (board.getBoardId() == idxNum) {
-                    boardResponseDTOList.add(BoardResponseDTO.from(board, null));
+
+                    String nickname = memberMapper.findNicknameById(board.getMemberId())
+                            .orElse("미상");
+
+                    boardResponseDTOList.add(BoardResponseDTO.from(board, nickname,null));
                     break;
                 }
             }
@@ -170,6 +179,7 @@ public class BoardServiceImpl implements BoardService {
         Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다"));
 
-        return BoardResponseDTO.from(board, member.getMemberNickname());
+        List<Comment> commentList = commentMapper.findByBoardId(boardId);
+        return BoardResponseDTO.from(board, member.getMemberNickname(), commentList);
     }
 }

@@ -9,14 +9,14 @@ import java.util.Optional;
 @Mapper
 public interface MemberMapper {
     void save(Member member);
-    boolean checkNickName(String nickName);
-    boolean checkEmail(String email);
-    Optional<String> findNicknameById(int id);
-    Optional<Integer> findMemberIdByNickname(String nickName);
-    Optional<Member> findMemberByEmail(String email);
+    boolean checkNickName(String memberNickName);
+    boolean checkEmail(String memberEmail);
+    Optional<String> findNicknameById(int memberId);
+    Optional<Integer> findMemberIdByNickname(String memberNickName);
+    Optional<Member> findMemberByEmail(String memberEmail);
     Optional<Member> findMemberById(int memberId);
 
-    void saveRefreshToken(@Param("refreshToken") String refreshToken,@Param("email") String email);
-    Optional<String> findMemberByRefreshToken(String refreshToken);
+    void saveRefreshToken(@Param("memberRefreshToken") String memberRefreshToken,@Param("memberEmail") String memberEmail);
+    Optional<String> findMemberByRefreshToken(String memberRefreshToken);
     void deleteRefreshToken(String memberEmail);
 }

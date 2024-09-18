@@ -17,8 +17,8 @@ public class CommentController {
 
     // 댓글 저장
     @PostMapping("")
-    public ResponseEntity<Integer> createComment(@RequestBody @Valid CommentDTO commentDTO) {
-        int result = commentService.saveComment(commentDTO);
+    public ResponseEntity<List<CommentDTO>> createComment(@RequestBody @Valid CommentDTO commentDTO) {
+        List<CommentDTO> result = commentService.saveComment(commentDTO);
         return ResponseEntity.ok(result);
     }
 
@@ -38,8 +38,8 @@ public class CommentController {
 
     // 댓글 수정
     @PutMapping("")
-    public ResponseEntity<Integer> updateComment(@RequestBody CommentDTO commentDTO) {
-        int result = commentService.changeCommentContent(commentDTO);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<List<CommentDTO>> updateComment(@RequestBody CommentDTO commentDTO) {
+        List<CommentDTO> comments = commentService.changeCommentContent(commentDTO);
+        return ResponseEntity.ok(comments);
     }
 }

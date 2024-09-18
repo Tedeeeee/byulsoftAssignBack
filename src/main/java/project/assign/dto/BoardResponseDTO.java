@@ -31,15 +31,17 @@ public class BoardResponseDTO {
     private List<BoardStarDTO> boardStars = new ArrayList<>();
     private List<CommentDTO> comments = new ArrayList<>();
 
-    public static BoardResponseDTO from(Board board, String nickname) {
+    public static BoardResponseDTO from(Board board, String nickname, List<Comment> comments) {
         // boardStars를 DTO로 변경
         List<BoardStarDTO> boardStarDTO = new ArrayList<>();
         List<CommentDTO> commentDTO = new ArrayList<>();
         for (BoardStar star : board.getStars()) {
             boardStarDTO.add(BoardStarDTO.from(star));
         }
-        for (Comment comment : board.getComments()) {
-            commentDTO.add(CommentDTO.from(comment));
+        if (comments != null) {
+            for (Comment comment : comments) {
+                commentDTO.add(CommentDTO.from(comment));
+            }
         }
 
         return BoardResponseDTO.builder()

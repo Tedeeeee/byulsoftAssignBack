@@ -15,7 +15,7 @@ import project.assign.entity.BoardStarType;
 public class BoardStarDTO {
     private BoardStarType boardStarType;
     private String boardStarShortReview;
-    @Min(value = 1, message = "별점 평가는 최소 1점 이상이어야 합니다")
+    @Min(value = 1, message = "체크되지 않은 별점이 존재합니다")
     private int boardStarRating;
 
     public BoardStar toEntity(int boardId, int sortNo) {

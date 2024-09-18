@@ -93,7 +93,7 @@
         where board_is_delete = 0
     </select>
 
-    <select id="findByBoardId" resultMap="boardResultMap">
+    <select id="findByBoardId" resultMap="boardListResultMap">
         select b.board_id,
                b.member_id,
                b.board_title,
@@ -106,16 +106,9 @@
                bs.board_star_id,
                bs.board_star_type,
                bs.board_star_short_review,
-               bs.board_star_rating,
-               c.comment_id,
-               c.member_id AS comment_member_id,
-               c.member_nickname,
-               c.comment_content,
-               c.comment_created_at,
-               c.comment_updated_at
+               bs.board_star_rating
         from board b
-        left join board_star bs on b.board_id = bs.board_id
-        left JOIN comment c on b.board_id = c.board_id
+        join board_star bs on b.board_id = bs.board_id
         where b.board_is_delete = 0 and b.board_id = ${boardId}
     </select>
 

@@ -21,7 +21,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public int saveComment(CommentDTO commentDTO) {
+    public List<CommentDTO> saveComment(CommentDTO commentDTO) {
         Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다"));
 
@@ -34,7 +34,8 @@ public class CommentServiceImpl implements CommentService {
         Comment comment = commentDTO.toEntity();
         try{
             commentMapper.saveComment(comment);
-            return 1;
+            List<Comment> comments = commentMapper.findByBoardId(comment.getBoardId());
+            return comments.stream().map(CommentDTO::from).toList();
         } catch (Exception e) {
             throw new RuntimeException("입력 정보에 오류가 있습니다",e);
         }
@@ -68,7 +69,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public int changeCommentContent(CommentDTO commentDTO) {
+    public List<CommentDTO> changeCommentContent(CommentDTO commentDTO) {
         Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다"));
 
@@ -81,7 +82,9 @@ public class CommentServiceImpl implements CommentService {
 
         try {
             commentMapper.changeComment(commentDTO.getCommentId(), commentDTO.getCommentContent());
-            return 1;
+
+            List<Comment> comments = commentMapper.findByBoardId(commentDTO.getBoardId());
+            return comments.stream().map(CommentDTO::from).toList();
         } catch (Exception e) {
             throw new RuntimeException("댓글 수정에 문제가 발생", e);
         }

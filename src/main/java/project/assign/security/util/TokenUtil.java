@@ -45,10 +45,8 @@ public class TokenUtil {
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
         // 사용자의 정보를 vue 에서 전역으로 관리를 하기 위해 전송
-        String userNickname = objectMapper.writeValueAsString(memberResponseDTO);
-        response.getWriter().write(memberResponseDTO.getMemberId());
-        response.getWriter().write(memberResponseDTO.getMemberEmail());
-        response.getWriter().write(memberResponseDTO.getMemberNickname());
+        String memberInfo = objectMapper.writeValueAsString(memberResponseDTO);
+        response.getWriter().write(memberInfo);
 
         log.info("Access token 데이터 전송 완료: {}", accessToken);
     }

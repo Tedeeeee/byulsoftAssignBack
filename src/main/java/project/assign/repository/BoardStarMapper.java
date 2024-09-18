@@ -10,8 +10,8 @@ import java.util.List;
 public interface BoardStarMapper {
     void boardStarSave(BoardStar boardStar);
     void deleteBoardStarByBoardId(int boardId);
-    List<Integer>sortASCBoardIdByStarType(@Param("typeName") String boardStarType, @Param("offset") int offset);
-    List<Integer>sortDESCBoardIdByStarType(@Param("typeName") String boardStarType, @Param("offset") int offset);
+    List<Integer>sortASCBoardIdByStarType(@Param("boardStarType") String boardStarType, @Param("offset") int offset);
+    List<Integer>sortDESCBoardIdByStarType(@Param("boardStarType") String boardStarType, @Param("offset") int offset);
 
     void boardStarUpdate(BoardStar boardStar);
 

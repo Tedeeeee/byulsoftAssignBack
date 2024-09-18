@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/posts")
+@RequestMapping("/api/boards")
 public class BoardController {
 
     private final BoardService boardService;
@@ -47,10 +47,10 @@ public class BoardController {
 
     // 특정 조건으로 정렬
     @GetMapping("/sort")
-    public ResponseEntity<List<BoardResponseDTO>> sortBoard(@RequestParam(name = "sortName") String sortName,
+    public ResponseEntity<List<BoardResponseDTO>> sortBoard(@RequestParam(name = "sortOrder") String sortOrder,
                                                             @RequestParam(name = "sortType") String sortType,
                                                             @RequestParam(name = "pn", defaultValue = "1") int pageNumber) {
-        List<BoardResponseDTO> boardResponseDTOS = boardService.sortTypeBoard(sortName, sortType, pageNumber);
+        List<BoardResponseDTO> boardResponseDTOS = boardService.sortTypeBoard(sortOrder, sortType, pageNumber);
         return ResponseEntity.ok(boardResponseDTOS);
     }
 

@@ -48,7 +48,7 @@ public interface BoardService {
      * @since : 2024.09.12
      * @author : T.S YUN
      */
-    List<BoardResponseDTO> sortTypeBoard(String typeName, String sortType, int pageNum);
+    List<BoardResponseDTO> sortTypeBoard(String sortOrder, String sortType, int pageNum);
 
     /**
      * 게시글 단일 조회

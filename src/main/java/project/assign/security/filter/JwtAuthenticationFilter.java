@@ -41,7 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Pattern.compile("/api/members/emails/check"),
             Pattern.compile("/api/members/nicknames/check"),
             Pattern.compile("/api/members/register"),
-            Pattern.compile("/api/members/countPage"),
+            Pattern.compile("/api/boards/count"),
             Pattern.compile("/api/boards/allBoard"),
             Pattern.compile("/api/boards/sort"),
             Pattern.compile("/api/boards/detail/\\d+")
