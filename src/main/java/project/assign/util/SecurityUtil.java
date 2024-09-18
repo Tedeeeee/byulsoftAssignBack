@@ -1,10 +1,15 @@
 package project.assign.util;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import project.assign.repository.MemberMapper;
 
+@RequiredArgsConstructor
 public class SecurityUtil {
-    public static String getCurrentMemberId() {
+
+
+    public static String getCurrentMemberEmail() {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication.getName() == null) {

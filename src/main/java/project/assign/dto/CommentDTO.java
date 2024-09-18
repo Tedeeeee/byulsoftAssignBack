@@ -2,6 +2,7 @@ package project.assign.dto;
 
 import lombok.*;
 import project.assign.entity.Comment;
+import project.assign.util.TimeChangerUtil;
 
 @Getter
 @AllArgsConstructor
@@ -9,34 +10,32 @@ import project.assign.entity.Comment;
 @Builder
 public class CommentDTO {
 
-    private int id;
-    @Setter
+    private int commentId;
     private int memberId;
     private int boardId;
-    private String content;
-    @Setter
-    private String nickname;
-    private String createdAt;
-    private String updatedAt;
+    private String commentContent;
+    private String memberNickname;
+    private String commentCreatedAt;
+    private String commentUpdatedAt;
 
-    public static Comment toEntity(CommentDTO commentDTO) {
+    public Comment toEntity() {
         return Comment.builder()
-                .boardId(commentDTO.getBoardId())
-                .memberId(commentDTO.getMemberId())
-                .content(commentDTO.getContent())
-                .nickname(commentDTO.getNickname())
+                .boardId(boardId)
+                .memberId(memberId)
+                .commentContent(commentContent)
+                .memberNickname(memberNickname)
                 .build();
     }
 
     public static CommentDTO from(Comment comment) {
         return CommentDTO.builder()
-                .id(comment.getId())
+                .commentId(comment.getCommentId())
                 .boardId(comment.getBoardId())
                 .memberId(comment.getMemberId())
-                .content(comment.getContent())
-                .nickname(comment.getNickname())
-                .createdAt(comment.getCreatedAt())
-                .updatedAt(comment.getUpdatedAt())
+                .commentContent(comment.getCommentContent())
+                .memberNickname(comment.getMemberNickname())
+                .commentCreatedAt(TimeChangerUtil.timeChange(comment.getCommentCreatedAt()))
+                .commentUpdatedAt(TimeChangerUtil.timeChange(comment.getCommentUpdatedAt()))
                 .build();
     }
 }

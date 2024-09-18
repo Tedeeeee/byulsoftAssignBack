@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import project.assign.dto.MemberDTO;
+import project.assign.dto.MemberRequestDTO;
 import project.assign.service.MemberService;
 
 @RestController
@@ -14,34 +14,33 @@ public class MemberController {
 
     private final MemberService memberService;
 
+    // 회원가입
     @PostMapping("/register")
-    public ResponseEntity<Integer> register(@RequestBody @Valid MemberDTO memberDTO) {
-        int result = memberService.registerMember(memberDTO);
+    public ResponseEntity<Integer> register(@RequestBody @Valid MemberRequestDTO memberRequestDTO) {
+        int result = memberService.registerMember(memberRequestDTO);
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/checkNickname")
-    public ResponseEntity<String> checkNickName(@RequestParam(name = "nickname") String nickname) {
+    // 닉네임 체크
+    @GetMapping("/nicknames/check")
+    public ResponseEntity<String> checkNicknameAvailability(@RequestParam(name = "nickname") String nickname) {
         memberService.checkNickname(nickname);
         return ResponseEntity.ok("사용 가능한 닉네임입니다.");
     }
 
-    @GetMapping("/checkEmail")
-    public ResponseEntity<String> checkEmail(@RequestParam(name = "email") String email) {
+    // 이메일 체크
+    @GetMapping("/emails/check")
+    public ResponseEntity<String> checkEmailAvailability(@RequestParam(name = "email") String email) {
         memberService.checkEmail(email);
         return ResponseEntity.ok("사용 가능한 이메일입니다.");
     }
 
-    // 로그아웃을 하면 시큐리티의 contextHolder 에 있는 정보를 삭제해야한다.
-    @PatchMapping("")
-    public ResponseEntity<Integer> deleteRefreshToken() {
+    // 로그아웃시 사용자 DB의 refreshToken삭제
+    // 추후 logout으로 변경
+    @PatchMapping("/logout")
+    public ResponseEntity<Integer> removeRefreshToken() {
         int result = memberService.deleteRefreshToken();
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/healthCheck")
-    public ResponseEntity<String> healthCheck() {
-        System.out.println("들어오는가?");
-        return ResponseEntity.ok("헬스 체크 완료");
-    }
 }

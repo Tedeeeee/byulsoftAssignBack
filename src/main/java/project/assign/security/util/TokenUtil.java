@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
+import project.assign.dto.MemberResponseDTO;
+import project.assign.entity.Member;
 import project.assign.security.service.TokenService;
 
 import java.io.IOException;
@@ -24,7 +26,7 @@ public class TokenUtil {
     private final ObjectMapper objectMapper;
 
     // 토큰 전달
-    public void sendTokens(HttpServletResponse response, String accessToken, String refreshToken, String nickname) throws IOException {
+    public void sendTokens(HttpServletResponse response, String accessToken, String refreshToken, MemberResponseDTO memberResponseDTO) throws IOException {
         ResponseCookie accessCookie = ResponseCookie.from(TokenService.ACCESS_TOKEN_SUBJECT, accessToken)
                 .httpOnly(true)
                 .path("/")
@@ -42,8 +44,11 @@ public class TokenUtil {
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-        String userNickname = objectMapper.writeValueAsString(nickname);
-        response.getWriter().write(userNickname);
+        // 사용자의 정보를 vue 에서 전역으로 관리를 하기 위해 전송
+        String userNickname = objectMapper.writeValueAsString(memberResponseDTO);
+        response.getWriter().write(memberResponseDTO.getMemberId());
+        response.getWriter().write(memberResponseDTO.getMemberEmail());
+        response.getWriter().write(memberResponseDTO.getMemberNickname());
 
         log.info("Access token 데이터 전송 완료: {}", accessToken);
     }

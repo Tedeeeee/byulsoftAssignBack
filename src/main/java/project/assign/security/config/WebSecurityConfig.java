@@ -24,9 +24,6 @@ import project.assign.security.provider.CustomAuthenticationProvider;
 import project.assign.security.service.CustomUserDetailService;
 import project.assign.security.service.TokenService;
 import project.assign.security.util.TokenUtil;
-import project.assign.service.MemberCheck;
-import project.assign.service.MemberPasswordEncoder;
-import project.assign.service.MemberService;
 
 import java.util.List;
 

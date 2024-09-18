@@ -36,7 +36,7 @@ public interface BoardService {
      * @since : 2024.09.11
      * @author : T.S YUN
      */
-    int deleteBoard(int id);
+    int deleteBoard(int boardId);
 
     /**
      * 게시판 글 전체 조회
@@ -52,8 +52,7 @@ public interface BoardService {
 
     /**
      * 게시글 단일 조회
+     * 댓글이 필요하다
      */
-    BoardResponseDTO findByBoardId(int id);
-
-
+    BoardResponseDTO findByBoardId(int boardId);
 }

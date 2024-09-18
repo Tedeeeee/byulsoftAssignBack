@@ -35,7 +35,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         try {
             Member member = objectMapper.readValue(request.getInputStream(), Member.class);
 
-            return new UsernamePasswordAuthenticationToken(member.getEmail(), member.getPassword());
+            return new UsernamePasswordAuthenticationToken(member.getMemberEmail(), member.getMemberPassword());
         } catch (UsernameNotFoundException e) {
             throw new UsernameNotFoundException("해당 유저는 찾을 수 없습니다.", e);
         } catch (Exception e) {
