@@ -1,19 +1,19 @@
-package project.assign.Entity;
+package project.assign.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Builder
 public class Member {
+    private int id;
     private String email;
     private String password;
-    private String nickName;
+    private String nickname;
     private String name;
     private String phoneNumber;
+    private String refreshToken;
+    private boolean isDelete;
 }
 
