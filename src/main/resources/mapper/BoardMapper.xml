@@ -91,6 +91,12 @@
         select count(board_id)
         from board
         where board_is_delete = 0
+        <if test="searchType == '지역'">
+            and board_region = #{searchText}
+        </if>
+        <if test="searchType == '제목'">
+            and match(board_title) against (#{searchText})
+        </if>
     </select>
 
     <select id="findByBoardId" resultMap="boardListResultMap">
@@ -115,10 +121,16 @@
     <!-- 여기는 기준이 board 테이블에 있기 때문에 수정 가능 -->
     <!-- boardStar 의 기준으로 검색하는 것과 같다 -->
     <select id="getBasicBoardList" resultType="java.lang.Integer">
-        SELECT board_id
-        FROM board
+        select board_id
+        from board
         where board_is_delete = 0
-        order by board_updated_at desc
+        <if test="searchType == '지역'">
+            and board_region = #{searchText}
+        </if>
+        <if test="searchType == '제목'">
+            and match(board_title) against (#{searchText})
+        </if>
+        order by board_created_at desc
         limit 5 offset #{offset}
     </select>
 

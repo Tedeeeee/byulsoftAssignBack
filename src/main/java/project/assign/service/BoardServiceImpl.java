@@ -3,10 +3,7 @@ package project.assign.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import project.assign.dto.BoardRequestDTO;
-import project.assign.dto.BoardResponseDTO;
-import project.assign.dto.BoardStarDTO;
-import project.assign.dto.CommentDTO;
+import project.assign.dto.*;
 import project.assign.entity.*;
 import project.assign.repository.BoardMapper;
 import project.assign.repository.BoardStarMapper;
@@ -28,8 +25,13 @@ public class BoardServiceImpl implements BoardService {
     private final BoardStarMapper boardStarMapper;
 
     @Override
-    public int countBoards() {
-        int pageCount = boardMapper.countBoards();
+    public int countBoards(SearchConditionDTO searchConditionDTO) {
+        // 특수 정렬은 사실 상관없다. 기존 검색중에 갯수가 달라질 수 있는것은 기존 검색이 달라지는 것
+        // 별 순으로 검색하는 것은 전체 게시글을 검색하는 것과 갯수가 다를 수 없다.
+
+        // 갯수가 다른 것은 지역과 제목이 포함되어 있는 것을 경우 어렵다는 것
+        // 즉, 기존의 검색조건인 searchType이 null이 아니라면
+        int pageCount = boardMapper.countBoards(searchConditionDTO.getSearchType(), searchConditionDTO.getSearchText());;
 
         return (int) Math.ceil((double) pageCount / 5);
     }
@@ -37,6 +39,8 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public int saveBoard(BoardRequestDTO boardRequestDTO) {
+        String currentMemberEmail = SecurityUtil.getCurrentMemberEmail();
+        System.out.println(currentMemberEmail);
         // 사용자 정보는 시큐리티를 통해 확인
         Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다"));
@@ -118,10 +122,12 @@ public class BoardServiceImpl implements BoardService {
 
     // 기본 정렬 ( 최신순 ) 게시글 가져오기
     @Override
-    public List<BoardResponseDTO> getAllBoard(int pageNumber) {
+    public List<BoardResponseDTO> getBasicBoard(SearchConditionDTO searchConditionDTO) {
         // Board 테이블 페이징 하기
-        int pageOffset = (pageNumber - 1) * 5;
-        List<Integer> boards = boardMapper.getBasicBoardList(pageOffset);
+        int pageOffset = (searchConditionDTO.getPageNumber() - 1) * 5;
+        // 여기서 검색 조건이 담긴 기본 정렬은 여기서 셋팅
+        // 검색 타입(제목, 지역)이 들어가줘야 한다
+        List<Integer> boards = boardMapper.getBasicBoardList(searchConditionDTO.getSearchType(), searchConditionDTO.getSearchText(), pageOffset);
 
         List<BoardResponseDTO> boardResponseDTOList = new ArrayList<>();
         for (Integer boardId : boards) {
@@ -132,7 +138,6 @@ public class BoardServiceImpl implements BoardService {
             String nickname = memberMapper.findNicknameById(board.getMemberId())
                     .orElse("미상");
 
-
             BoardResponseDTO from = BoardResponseDTO.from(board, nickname, null);
             boardResponseDTOList.add(from);
         }
@@ -141,13 +146,13 @@ public class BoardServiceImpl implements BoardService {
 
     // 조건이 담긴 정렬의 서비스
     @Override
-    public List<BoardResponseDTO> sortTypeBoard(String sortOrder, String sortType, int pageNum) {
-        int pageOffset = (pageNum - 1) * 5;
+    public List<BoardResponseDTO> sortTypeBoard(SearchConditionDTO searchConditionDTO) {
+        int pageOffset = (searchConditionDTO.getPageNumber() - 1) * 5;
         List<Integer> sortedBoardIdList;
-        if (sortOrder.equals("asc")) {
-            sortedBoardIdList = boardStarMapper.sortASCBoardIdByStarType(sortType, pageOffset);
+        if (searchConditionDTO.getSortOrder().equals("asc")) {
+            sortedBoardIdList = boardStarMapper.sortASCBoardIdByStarType(searchConditionDTO.getSortType(), pageOffset, searchConditionDTO.getSearchType(), searchConditionDTO.getSearchText());
         } else  {
-            sortedBoardIdList = boardStarMapper.sortDESCBoardIdByStarType(sortType, pageOffset);
+            sortedBoardIdList = boardStarMapper.sortDESCBoardIdByStarType(searchConditionDTO.getSortType(), pageOffset, searchConditionDTO.getSearchType(), searchConditionDTO.getSearchText());
         }
 
         List<Board> boardList = boardMapper.getBoardListBySortTest(sortedBoardIdList);
@@ -176,10 +181,10 @@ public class BoardServiceImpl implements BoardService {
         Board board = boardMapper.findByBoardId(boardId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 게시글입니다"));
 
-        Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
+        String nickname = memberMapper.findNicknameById(board.getMemberId())
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다"));
 
         List<Comment> commentList = commentMapper.findByBoardId(boardId);
-        return BoardResponseDTO.from(board, member.getMemberNickname(), commentList);
+        return BoardResponseDTO.from(board, nickname, commentList);
     }
 }

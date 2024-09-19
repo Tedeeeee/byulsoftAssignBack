@@ -11,6 +11,7 @@ import project.assign.util.TimeChangerUtil;
 public class CommentDTO {
 
     private int commentId;
+    @Setter
     private int memberId;
     private int boardId;
     private String commentContent;

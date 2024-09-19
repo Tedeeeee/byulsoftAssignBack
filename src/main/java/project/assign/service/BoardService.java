@@ -3,6 +3,7 @@ package project.assign.service;
 
 import project.assign.dto.BoardRequestDTO;
 import project.assign.dto.BoardResponseDTO;
+import project.assign.dto.SearchConditionDTO;
 import project.assign.entity.BoardStarType;
 
 import java.util.List;
@@ -15,7 +16,7 @@ public interface BoardService {
      * @author : T.S YUN
      * @since : 2024.09.12
      */
-    int countBoards();
+    int countBoards(SearchConditionDTO searchConditionDTO);
 
     /**
      * 게시글 저장
@@ -41,14 +42,14 @@ public interface BoardService {
     /**
      * 게시판 글 전체 조회
      */
-    List<BoardResponseDTO> getAllBoard(int pageNum);
+    List<BoardResponseDTO> getBasicBoard(SearchConditionDTO searchConditionDTO);
 
     /**
      * 설명 : 원하는 종류로 정렬
      * @since : 2024.09.12
      * @author : T.S YUN
      */
-    List<BoardResponseDTO> sortTypeBoard(String sortOrder, String sortType, int pageNum);
+    List<BoardResponseDTO> sortTypeBoard(SearchConditionDTO searchConditionDTO);
 
     /**
      * 게시글 단일 조회

@@ -25,10 +25,7 @@ public class CommentServiceImpl implements CommentService {
         Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다"));
 
-        // 프론트에서 id를 저장해서 전달한다.
-        if (member.getMemberId() != commentDTO.getMemberId()) {
-            throw new RuntimeException("회원의 정보가 일치하지 않습니다");
-        }
+        commentDTO.setMemberId(member.getMemberId());
 
         // DTO -> Entity
         Comment comment = commentDTO.toEntity();
