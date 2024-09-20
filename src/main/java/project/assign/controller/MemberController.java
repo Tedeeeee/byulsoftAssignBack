@@ -42,5 +42,4 @@ public class MemberController {
         int result = memberService.deleteRefreshToken();
         return ResponseEntity.ok(result);
     }
-
 }

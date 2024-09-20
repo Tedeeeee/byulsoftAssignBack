@@ -84,6 +84,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
+
     private void handleAccessToken(String accessToken) {
         if(tokenUtil.isValidToken(accessToken)) {
             String memberEmail = tokenUtil.getMemberEmailFromToken(accessToken);
@@ -113,6 +114,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         MemberResponseDTO memberResponseDTO = new MemberResponseDTO();
         MemberResponseDTO memberResponse = memberResponseDTO.from(member);
         tokenUtil.sendTokens(response, accessToken, resetRefreshToken, memberResponseDTO);
+
+        saveAuthentication(member);
     }
 
     private JSONObject jsonResponseWrapper(Exception e) {
