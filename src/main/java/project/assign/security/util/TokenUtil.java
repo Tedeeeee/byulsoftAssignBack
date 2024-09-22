@@ -8,10 +8,16 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
+import org.springframework.web.ErrorResponse;
+import project.assign.commonApi.CommonResponse;
 import project.assign.dto.MemberResponseDTO;
 import project.assign.entity.Member;
+import project.assign.exception.BusinessExceptionHandler;
+import project.assign.exception.ErrorCode;
 import project.assign.security.service.TokenService;
 
 import java.io.IOException;
@@ -45,7 +51,7 @@ public class TokenUtil {
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
         // 사용자의 정보를 vue 에서 전역으로 관리를 하기 위해 전송
-        String memberInfo = objectMapper.writeValueAsString(memberResponseDTO);
+        String memberInfo = objectMapper.writeValueAsString(new CommonResponse<>(200, memberResponseDTO));
         response.getWriter().write(memberInfo);
 
         log.info("Access token 데이터 전송 완료: {}", accessToken);
@@ -62,7 +68,7 @@ public class TokenUtil {
     // 토큰에서 사용자 이메일 추출
     public String getMemberEmailFromToken(String token) {
         Claims claims = getClaimsFromToken(token)
-                .orElseThrow(() -> new RuntimeException("토큰에 유저의 정보가 없습니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.INVALID_TOKEN, "토큰에 유저의 정보가 없습니다"));
 
         return claims.get("memberEmail").toString();
     }
@@ -83,7 +89,7 @@ public class TokenUtil {
     public boolean isValidToken(String token) {
         try {
             Claims claims = getClaimsFromToken(token)
-                    .orElseThrow(() -> new RuntimeException("토큰이 존재하지 않습니다"));
+                    .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.INVALID_TOKEN, "토큰이 존재하지 않습니다"));
 
             log.info("expireTime : {}", claims.getExpiration());
             return true;

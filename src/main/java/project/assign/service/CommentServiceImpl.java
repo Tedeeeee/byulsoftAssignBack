@@ -6,6 +6,8 @@ import org.springframework.transaction.annotation.Transactional;
 import project.assign.dto.CommentDTO;
 import project.assign.entity.Comment;
 import project.assign.entity.Member;
+import project.assign.exception.BusinessExceptionHandler;
+import project.assign.exception.ErrorCode;
 import project.assign.repository.CommentMapper;
 import project.assign.repository.MemberMapper;
 import project.assign.util.SecurityUtil;
@@ -23,7 +25,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public List<CommentDTO> saveComment(CommentDTO commentDTO) {
         Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 회원입니다"));
 
         commentDTO.setMemberId(member.getMemberId());
 
@@ -48,14 +50,14 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public int deleteByCommentId(int commentId) {
         Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 회원입니다"));
 
         Comment comment = commentMapper.findByCommentId(commentId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 댓글입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND,"존재하지 않는 댓글입니다"));
 
         // 프론트에서 id를 저장해서 전달한다.
         if (member.getMemberId() != comment.getMemberId()) {
-            throw new RuntimeException("회원의 정보가 일치하지 않습니다");
+            throw new BusinessExceptionHandler(ErrorCode.MATCH_FAIL, "회원의 정보가 일치하지 않습니다");
         }
         try {
             commentMapper.deleteByCommentId(commentId);
@@ -68,13 +70,13 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public List<CommentDTO> changeCommentContent(CommentDTO commentDTO) {
         Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 회원입니다"));
 
         Comment comment = commentMapper.findByCommentId(commentDTO.getCommentId())
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 댓글입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND,"존재하지 않는 댓글입니다"));
 
         if (member.getMemberId() != comment.getMemberId()) {
-            throw new RuntimeException("회원의 정보가 일치하지 않습니다");
+            throw new BusinessExceptionHandler(ErrorCode.MATCH_FAIL, "회원의 정보가 일치하지 않습니다");
         }
 
         try {

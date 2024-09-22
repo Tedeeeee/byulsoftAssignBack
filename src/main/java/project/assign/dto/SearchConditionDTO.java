@@ -13,4 +13,9 @@ public class SearchConditionDTO {
     private int pageNumber;
     private String searchType;
     private String searchText;
+
+    public int pageOffset() {
+        int pageSize = 5;
+        return (pageNumber - 1) * pageSize;
+    }
 }

@@ -53,55 +53,28 @@
         order By sort_no
     </select>
 
-    <select id="sortASCBoardIdByStarType" resultType="java.lang.Integer">
+    <select id="sortBoardIdByStarType" resultType="java.lang.Integer">
         select board_id
         from board_star
-        where board_star_type = #{boardStarType}
-        <if test="searchType.equals('지역')">
-            and EXISTS (
+        where board_star_type = #{searchConditionDTO.sortType}
+        and exists(
             select 1
             from board b
-            where b.board_region = #{searchText}
-            and b.board_is_delete = 0
+            where b.board_is_delete = 0
             and b.board_id = board_star.board_id
-            )
+            <if test="'지역'.equals(searchConditionDTO.searchType)">
+                and b.board_region = #{searchConditionDTO.searchText}
+            </if>
+            <if test="'제목'.equals(searchConditionDTO.searchType)">
+                and match(b.board_title) against (#{searchConditionDTO.searchText})
+            </if>
+        )
+        <if test="'desc'.equals(searchConditionDTO.sortOrder)">
+            order by board_star_rating desc
         </if>
-        <if test="searchType.equals('제목')">
-            and EXISTS (
-            select 1
-            from board b
-            where match(b.board_title) against (#{searchText})
-            and b.board_is_delete = 0
-            and b.board_id = board_star.board_id
-            )
+        <if test="'asc'.equals(searchConditionDTO.sortOrder)">
+            order by board_star_rating
         </if>
-        order by board_star_rating
-        limit 5 offset #{offset}
-    </select>
-
-    <select id="sortDESCBoardIdByStarType" resultType="java.lang.Integer">
-        select board_id
-        from board_star
-        where board_star_type = #{boardStarType}
-        <if test="searchType.equals('지역')">
-            and EXISTS (
-            select 1
-            from board b
-            where b.board_region = #{searchText}
-            and b.board_is_delete = 0
-            and b.board_id = board_star.board_id
-            )
-        </if>
-        <if test="searchType.equals('제목')">
-            and EXISTS (
-            select 1
-            from board b
-            where match(b.board_title) against (#{searchText})
-            and b.board_is_delete = 0
-            and b.board_id = board_star.board_id
-            )
-        </if>
-        order by board_star_rating desc
         limit 5 offset #{offset}
     </select>
 

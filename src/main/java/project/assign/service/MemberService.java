@@ -15,7 +15,7 @@ public interface MemberService {
      * @author : T.S YUN
      * @param nickname
      */
-    void checkNickname(String nickname);
+    int checkNickname(String nickname);
 
     /**
      * 
@@ -24,7 +24,7 @@ public interface MemberService {
      * @author : T.S YUN
      * @param email
      */
-    void checkEmail(String email);
+    int checkEmail(String email);
 
     /**
      * 

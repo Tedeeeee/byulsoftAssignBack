@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import project.assign.commonApi.CommonResponse;
 import project.assign.dto.MemberRequestDTO;
 import project.assign.service.MemberService;
 
@@ -16,30 +17,29 @@ public class MemberController {
 
     // 회원가입
     @PostMapping("/register")
-    public ResponseEntity<Integer> register(@RequestBody @Valid MemberRequestDTO memberRequestDTO) {
+    public CommonResponse<Integer> register(@RequestBody @Valid MemberRequestDTO memberRequestDTO) {
         int result = memberService.registerMember(memberRequestDTO);
-        return ResponseEntity.ok(result);
-    }
-
-    // 닉네임 체크
-    @GetMapping("/nicknames/check")
-    public ResponseEntity<String> checkNicknameAvailability(@RequestParam(name = "nickname") String nickname) {
-        memberService.checkNickname(nickname);
-        return ResponseEntity.ok("사용 가능한 닉네임입니다.");
+        return new CommonResponse<>(200, result, "회원가입이 완료되었습니다");
     }
 
     // 이메일 체크
     @GetMapping("/emails/check")
-    public ResponseEntity<String> checkEmailAvailability(@RequestParam(name = "email") String email) {
-        memberService.checkEmail(email);
-        return ResponseEntity.ok("사용 가능한 이메일입니다.");
+    public CommonResponse<Integer> checkEmailAvailability(@RequestParam(name = "email") String email) {
+        int result = memberService.checkEmail(email);
+        return new CommonResponse<>(200, result, "사용 가능한 이메일입니다");
+    }
+
+    // 닉네임 체크
+    @GetMapping("/nicknames/check")
+    public CommonResponse<Integer> checkNicknameAvailability(@RequestParam(name = "nickname") String nickname) {
+        int result = memberService.checkNickname(nickname);
+        return new CommonResponse<>(200, result, "사용 가능한 닉네임입니다");
     }
 
     // 로그아웃시 사용자 DB의 refreshToken삭제
-    // 추후 logout으로 변경
     @PatchMapping("/logout")
-    public ResponseEntity<Integer> removeRefreshToken() {
+    public CommonResponse<Integer> removeRefreshToken() {
         int result = memberService.deleteRefreshToken();
-        return ResponseEntity.ok(result);
+        return new CommonResponse<>(200, result);
     }
 }

@@ -5,15 +5,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.assign.dto.*;
 import project.assign.entity.*;
+import project.assign.exception.BusinessExceptionHandler;
+import project.assign.exception.ErrorCode;
 import project.assign.repository.BoardMapper;
 import project.assign.repository.BoardStarMapper;
 import project.assign.repository.CommentMapper;
 import project.assign.repository.MemberMapper;
 import project.assign.util.SecurityUtil;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +30,13 @@ public class BoardServiceImpl implements BoardService {
         // 별 순으로 검색하는 것은 전체 게시글을 검색하는 것과 갯수가 다를 수 없다.
 
         // 갯수가 다른 것은 지역과 제목이 포함되어 있는 것을 경우 어렵다는 것
-        // 즉, 기존의 검색조건인 searchType이 null이 아니라면
+        // 페이지를 계산하면서
+        // 1. sortType 이 null 일때
+        // 2. sortType 이 null 이 아닐떄를 구분해야 한다.
+        // 페이지의 갯수를 세는 경우
+        // 1. 기본 정렬
+        // 2. 특정 조건으로 정렬하는 경우 => 기본 정렬과 다를것 없다
+        // 3. 검색어가 존재하면 총 갯수가 다르다.
         int pageCount = boardMapper.countBoards(searchConditionDTO.getSearchType(), searchConditionDTO.getSearchText());;
 
         return (int) Math.ceil((double) pageCount / 5);
@@ -40,10 +46,9 @@ public class BoardServiceImpl implements BoardService {
     @Transactional
     public int saveBoard(BoardRequestDTO boardRequestDTO) {
         String currentMemberEmail = SecurityUtil.getCurrentMemberEmail();
-        System.out.println(currentMemberEmail);
         // 사용자 정보는 시큐리티를 통해 확인
         Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 사용자입니다"));
 
         try {
             // 보드를 먼저 저장하고 key를 바로 반환
@@ -72,14 +77,14 @@ public class BoardServiceImpl implements BoardService {
     public int updateBoard(BoardRequestDTO boardRequestDTO) {
         // 1. 수정하려는 게시글 존재 확인
         Board findBoard = boardMapper.findByBoardId(boardRequestDTO.getBoardId())
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 게시글입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 게시글입니다"));
 
         // 2. 사용자의 정보와 게시글에 저장된 사용자 정보 확인
         Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 회원입니다"));
 
         if (member.getMemberId() != findBoard.getMemberId()) {
-            throw new RuntimeException("사용자의 정보가 일치하지 않습니다");
+            throw new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 회원입니다");
         }
 
         try {
@@ -110,7 +115,7 @@ public class BoardServiceImpl implements BoardService {
     @Transactional
     public int deleteBoard(int id) {
         memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 사용자입니다"));
 
         try {
             boardMapper.deleteBoardById(id);
@@ -124,7 +129,7 @@ public class BoardServiceImpl implements BoardService {
     @Override
     public List<BoardResponseDTO> getBasicBoard(SearchConditionDTO searchConditionDTO) {
         // Board 테이블 페이징 하기
-        int pageOffset = (searchConditionDTO.getPageNumber() - 1) * 5;
+        int pageOffset = searchConditionDTO.pageOffset();
         // 여기서 검색 조건이 담긴 기본 정렬은 여기서 셋팅
         // 검색 타입(제목, 지역)이 들어가줘야 한다
         List<Integer> boards = boardMapper.getBasicBoardList(searchConditionDTO.getSearchType(), searchConditionDTO.getSearchText(), pageOffset);
@@ -133,7 +138,7 @@ public class BoardServiceImpl implements BoardService {
         for (Integer boardId : boards) {
             // 각각의 페이징 된 데이터를 가져온다
             Board board = boardMapper.findByBoardId(boardId)
-                    .orElseThrow(() -> new RuntimeException(boardId + "번의 작품은 존재하지 않습니다"));
+                    .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 게시글입니다"));
 
             String nickname = memberMapper.findNicknameById(board.getMemberId())
                     .orElse("미상");
@@ -147,14 +152,18 @@ public class BoardServiceImpl implements BoardService {
     // 조건이 담긴 정렬의 서비스
     @Override
     public List<BoardResponseDTO> sortTypeBoard(SearchConditionDTO searchConditionDTO) {
-        int pageOffset = (searchConditionDTO.getPageNumber() - 1) * 5;
+        int pageOffset = searchConditionDTO.pageOffset();
+
         List<Integer> sortedBoardIdList;
-        if (searchConditionDTO.getSortOrder().equals("asc")) {
-            sortedBoardIdList = boardStarMapper.sortASCBoardIdByStarType(searchConditionDTO.getSortType(), pageOffset, searchConditionDTO.getSearchType(), searchConditionDTO.getSearchText());
-        } else  {
-            sortedBoardIdList = boardStarMapper.sortDESCBoardIdByStarType(searchConditionDTO.getSortType(), pageOffset, searchConditionDTO.getSearchType(), searchConditionDTO.getSearchText());
+        if (searchConditionDTO.getSortOrder().equals("")) {
+            // 1. BoardMapper를 가야하는 이유 : sortOrder가 없기때문에
+            sortedBoardIdList = boardMapper.getBasicBoardList(searchConditionDTO.getSearchType(), searchConditionDTO.getSearchText(), pageOffset);
+        } else {
+            // 2. BoardStarMapper로 가야하는 이유 : sortOrder가 있기 때문에
+            sortedBoardIdList = boardStarMapper.sortBoardIdByStarType(searchConditionDTO, pageOffset);
         }
 
+        // 결국 100개의 쿼리가 날아가는 것 보다는 1개의 쿼리로 진행하는 것이 좋다
         List<Board> boardList = boardMapper.getBoardListBySortTest(sortedBoardIdList);
 
         List<BoardResponseDTO> boardResponseDTOList = new ArrayList<>();
@@ -179,10 +188,10 @@ public class BoardServiceImpl implements BoardService {
     @Override
     public BoardResponseDTO findByBoardId(int boardId) {
         Board board = boardMapper.findByBoardId(boardId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 게시글입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 게시글입니다"));
 
         String nickname = memberMapper.findNicknameById(board.getMemberId())
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 회원입니다"));
 
         List<Comment> commentList = commentMapper.findByBoardId(boardId);
         return BoardResponseDTO.from(board, nickname, commentList);

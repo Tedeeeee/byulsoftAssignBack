@@ -16,6 +16,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
 import project.assign.dto.MemberResponseDTO;
 import project.assign.entity.Member;
+import project.assign.exception.BusinessExceptionHandler;
+import project.assign.exception.ErrorCode;
 import project.assign.repository.MemberMapper;
 import project.assign.security.service.TokenService;
 import project.assign.security.util.TokenUtil;
@@ -35,19 +37,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     //private final MemberService memberService;
     private final MemberMapper memberMapper;
 
-    // 인가를 필요로 하지 않는 요청
-    private static final List<Pattern> EXCLUDE_PATTERNS = Collections.unmodifiableList(Arrays.asList(
-            Pattern.compile("/api/login"),
-            Pattern.compile("/api/members/emails/check"),
-            Pattern.compile("/api/members/nicknames/check"),
-            Pattern.compile("/api/members/register"),
-            Pattern.compile("/api/boards/count"),
-            Pattern.compile("/api/boards/basic"),
-            Pattern.compile("/api/boards/region"),
-            Pattern.compile("/api/boards/sort"),
-            Pattern.compile("/api/boards/\\d+")
-    ));
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
@@ -62,6 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
+            e.printStackTrace();
             response.setCharacterEncoding("UTF-8");
             response.setContentType("application/json");
             PrintWriter printWriter = response.getWriter();
@@ -89,20 +79,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if(tokenUtil.isValidToken(accessToken)) {
             String memberEmail = tokenUtil.getMemberEmailFromToken(accessToken);
             Member member = memberMapper.findMemberByEmail(memberEmail)
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다"));
+                    .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 회원입니다"));
 
             saveAuthentication(member);
         }
     }
 
     private void handleRefreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String refreshToken = tokenUtil.extractToken(request, "RefreshToken")
-                .orElseThrow(() -> new RuntimeException("refreshToken이 존재하지 않습니다"));
+        Optional<String> refreshTokenCheck = tokenUtil.extractToken(request, "RefreshToken");
+
+        if (refreshTokenCheck.isEmpty()) {
+            return;
+        }
+
+        String refreshToken = refreshTokenCheck.get();
 
         String memberEmail = memberMapper.findMemberByRefreshToken(refreshToken)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 회원의 토큰입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.INVALID_TOKEN, "존재하지 않는 회원의 토큰입니다"));
         Member member =memberMapper.findMemberByEmail(memberEmail)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 회원입니다"));
 
         // 사용자의 refreshToken이 정확하다면 accessToken과 refreshToken 다시 제작
         String accessToken = tokenService.createAccessToken(memberEmail);
@@ -139,12 +134,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         JSONObject jsonObject = new JSONObject(jsonMap);
         logger.error(resultMsg, e);
         return jsonObject;
-    }
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String servletPath = request.getServletPath();
-        System.out.println(servletPath);
-        return EXCLUDE_PATTERNS.stream().anyMatch(pattern -> pattern.matcher(servletPath).matches());
     }
 }
