@@ -17,4 +17,8 @@ public class Comment {
     private LocalDateTime commentCreatedAt;
     private LocalDateTime commentUpdatedAt;
     private boolean commentIsDelete;
+
+    public boolean getWriter(int memberId) {
+        return this.memberId != memberId;
+    }
 }

@@ -36,43 +36,26 @@
         where board_id = #{boardId}
     </delete>
 
-    <update id="boardStarUpdate">
-        update board_star
-        set board_star_short_review = #{boardStarShortReview},
-            board_star_rating = #{starRating}
-        where board_id = #{boardId} and board_star_type = #{starType}
-    </update>
-
-    <select id="getBoardStarByBoardId" resultMap="boardStarResultMap">
-        select board_id,
-               board_star_type,
-               board_star_short_review,
-               board_star_rating
-        from board_star
-        where board_id = #{boardId}
-        order By sort_no
-    </select>
-
     <select id="sortBoardIdByStarType" resultType="java.lang.Integer">
         select board_id
         from board_star
-        where board_star_type = #{searchConditionDTO.sortType}
+        where board_star_type = #{sortType}
         and exists(
             select 1
             from board b
             where b.board_is_delete = 0
             and b.board_id = board_star.board_id
-            <if test="'지역'.equals(searchConditionDTO.searchType)">
-                and b.board_region = #{searchConditionDTO.searchText}
+            <if test="'지역'.equals(searchType)">
+                and b.board_region = #{searchText}
             </if>
-            <if test="'제목'.equals(searchConditionDTO.searchType)">
-                and match(b.board_title) against (#{searchConditionDTO.searchText})
+            <if test="'제목'.equals(searchType)">
+                and match(b.board_title) against (#{searchText})
             </if>
         )
-        <if test="'desc'.equals(searchConditionDTO.sortOrder)">
+        <if test="'desc'.equals(sortOrder)">
             order by board_star_rating desc
         </if>
-        <if test="'asc'.equals(searchConditionDTO.sortOrder)">
+        <if test="'asc'.equals(sortOrder)">
             order by board_star_rating
         </if>
         limit 5 offset #{offset}

@@ -1,6 +1,7 @@
 package project.assign.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.assign.dto.CommentDTO;
@@ -15,6 +16,7 @@ import project.assign.util.SecurityUtil;
 import java.util.List;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
 
@@ -36,7 +38,7 @@ public class CommentServiceImpl implements CommentService {
             List<Comment> comments = commentMapper.findByBoardId(comment.getBoardId());
             return comments.stream().map(CommentDTO::from).toList();
         } catch (Exception e) {
-            throw new RuntimeException("입력 정보에 오류가 있습니다",e);
+            throw new BusinessExceptionHandler(ErrorCode.INSERT_FAIL, "댓글 등록을 실패하였습니다");
         }
     }
 
@@ -48,22 +50,23 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public int deleteByCommentId(int commentId) {
+    public void deleteByCommentId(int commentId) {
         Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
                 .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 회원입니다"));
 
         Comment comment = commentMapper.findByCommentId(commentId)
                 .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND,"존재하지 않는 댓글입니다"));
 
-        // 프론트에서 id를 저장해서 전달한다.
-        if (member.getMemberId() != comment.getMemberId()) {
+        // 지우려는자와 삭제하려는자가 다를 경우
+        if (comment.getWriter(member.getMemberId())) {
             throw new BusinessExceptionHandler(ErrorCode.MATCH_FAIL, "회원의 정보가 일치하지 않습니다");
         }
+
         try {
             commentMapper.deleteByCommentId(commentId);
-            return 1;
         } catch (Exception e) {
-            throw new RuntimeException("삭제에 실패하였습니다", e);
+            log.error(e.getMessage());
+            throw new BusinessExceptionHandler(ErrorCode.DELETE_FAIL, "삭제에 실패하였습니다");
         }
     }
 
@@ -75,7 +78,7 @@ public class CommentServiceImpl implements CommentService {
         Comment comment = commentMapper.findByCommentId(commentDTO.getCommentId())
                 .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND,"존재하지 않는 댓글입니다"));
 
-        if (member.getMemberId() != comment.getMemberId()) {
+        if (comment.getWriter(member.getMemberId())) {
             throw new BusinessExceptionHandler(ErrorCode.MATCH_FAIL, "회원의 정보가 일치하지 않습니다");
         }
 
@@ -85,7 +88,8 @@ public class CommentServiceImpl implements CommentService {
             List<Comment> comments = commentMapper.findByBoardId(commentDTO.getBoardId());
             return comments.stream().map(CommentDTO::from).toList();
         } catch (Exception e) {
-            throw new RuntimeException("댓글 수정에 문제가 발생", e);
+            log.error(e.getMessage());
+            throw new BusinessExceptionHandler(ErrorCode.UPDATE_FAIL, "수정에 실패하였습니다");
         }
     }
 }

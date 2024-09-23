@@ -120,7 +120,7 @@
 
     <!-- 여기는 기준이 board 테이블에 있기 때문에 수정 가능 -->
     <!-- boardStar 의 기준으로 검색하는 것과 같다 -->
-    <select id="getBasicBoardList" resultType="java.lang.Integer">
+    <select id="getBasicBoardIdList" resultType="java.lang.Integer">
         select board_id
         from board
         where board_is_delete = 0
@@ -134,27 +134,8 @@
         limit 5 offset #{offset}
     </select>
 
-    <select id="getBoardListBySort" resultMap="boardListResultMap">
-        select b.board_id,
-               b.member_id,
-               b.board_title,
-               b.board_content,
-               b.board_region,
-               b.board_view,
-               b.board_likes,
-               b.board_updated_at,
-               b.board_created_at,
-               bs.board_star_id,
-               bs.board_star_type,
-               bs.board_star_short_review,
-               bs.board_star_rating
-        from board b
-        join board_star bs on b.board_id = bs.board_id
-        where b.board_is_delete = 0 and b.board_id = ${boardId}
-        order by bs.sort_no
-    </select>
 
-    <select id="getBoardListBySortTest" resultMap="boardListResultMap">
+    <select id="getBoardListBySort" resultMap="boardListResultMap">
         select b.board_id,
                b.member_id,
                b.board_title,

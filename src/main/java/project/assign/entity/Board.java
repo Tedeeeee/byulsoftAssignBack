@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class Board {
-    private int boardId;
+    private Integer boardId;
     private int memberId;
     private String boardTitle;
     private String boardContent;
@@ -25,4 +25,8 @@ public class Board {
     private boolean boardIsDelete;
     private List<BoardStar> stars;
     private List<Comment> comments;
+
+    public boolean getWriter(int memberId) {
+        return this.memberId != memberId;
+    }
 }

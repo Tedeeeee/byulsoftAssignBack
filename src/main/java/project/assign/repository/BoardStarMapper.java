@@ -12,12 +12,6 @@ public interface BoardStarMapper {
     void boardStarSave(BoardStar boardStar);
     void deleteBoardStarByBoardId(int boardId);
 
-    List<Integer>sortBoardIdByStarType(SearchConditionDTO searchConditionDTO,
-                                       @Param("offset") int offset);
+    List<Integer>sortBoardIdByStarType(SearchConditionDTO searchConditionDTO);
 
-    void boardStarUpdate(BoardStar boardStar);
-
-    List<BoardStar> getBoardStarByBoardId(int boardId);
-
-    List<BoardStar> sortTest(int boardId);
 }

@@ -20,27 +20,27 @@ public class CommentController {
     @PostMapping("")
     public CommonResponse<List<CommentDTO>> createComment(@RequestBody @Valid CommentDTO commentDTO) {
         List<CommentDTO> result = commentService.saveComment(commentDTO);
-        return new CommonResponse<>(200, result, "댓글이 저장되었습니다");
+        return CommonResponse.success(result, "댓글이 저장되었습니다");
     }
 
     // 특정 게시글에 담긴 댓글 가져오기
     @GetMapping("/{boardId}")
     public CommonResponse<List<CommentDTO>> getCommentsByBoardId(@PathVariable int boardId) {
         List<CommentDTO> comments = commentService.findByBoardId(boardId);
-        return new CommonResponse<>(200, comments);
+        return CommonResponse.success(comments, "");
     }
 
     // 댓글 삭제
     @DeleteMapping("/{commentId}")
     public CommonResponse<Integer> deleteComment(@PathVariable int commentId) {
-        int result = commentService.deleteByCommentId(commentId);
-        return new CommonResponse<>(200, result, "댓글이 삭제되었습니다");
+        commentService.deleteByCommentId(commentId);
+        return CommonResponse.createSuccess("댓글이 삭제되었습니다");
     }
 
     // 댓글 수정
     @PutMapping("")
     public CommonResponse<List<CommentDTO>> updateComment(@RequestBody CommentDTO commentDTO) {
         List<CommentDTO> comments = commentService.changeCommentContent(commentDTO);
-        return new CommonResponse<>(200, comments, "댓글이 수정되었습니다");
+        return CommonResponse.success(comments, "댓글이 수정되었습니다");
     }
 }

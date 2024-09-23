@@ -2,6 +2,7 @@ package project.assign.repository;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import project.assign.dto.SearchConditionDTO;
 import project.assign.entity.Board;
 
 import java.util.List;
@@ -14,10 +15,10 @@ public interface BoardMapper {
     void deleteBoardById(int boardId);
     int countBoards(@Param("searchType") String searchType,
                     @Param("searchText") String searchText);
+
+/*    int countBoards(@Param("searchType") String searchType,
+                    @Param("searchText") String searchText);*/
     Optional<Board> findByBoardId(int boardId);
-    List<Integer> getBasicBoardList(@Param("searchType") String searchType,
-                                    @Param("searchText") String searchText,
-                                    @Param("offset")int offset);
-    Board getBoardListBySort(int boardId);
-    List<Board> getBoardListBySortTest(List<Integer> boards);
+    List<Integer> getBasicBoardIdList(SearchConditionDTO searchConditionDTO);
+    List<Board> getBoardListBySort(List<Integer> boards);
 }

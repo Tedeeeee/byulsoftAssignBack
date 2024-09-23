@@ -1,6 +1,7 @@
 package project.assign.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,14 +13,16 @@ import project.assign.repository.MemberMapper;
 import project.assign.util.SecurityUtil;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class MemberServiceImpl implements MemberService {
 
     private final MemberMapper memberMapper;
     private final MemberPasswordEncoder memberPasswordEncoder;
+
     @Transactional
     @Override
-    public int registerMember(MemberRequestDTO memberRequestDto) {
+    public void registerMember(MemberRequestDTO memberRequestDto) {
         checkEmail(memberRequestDto.getMemberEmail());
         checkNickname(memberRequestDto.getMemberNickname());
 
@@ -28,15 +31,13 @@ public class MemberServiceImpl implements MemberService {
         try {
             memberMapper.save(member);
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(e.getMessage(), e);
+            log.error(e.getMessage());
+            throw new BusinessExceptionHandler(ErrorCode.INSERT_FAIL, "회원 등록에 실패하였습니다");
         }
-
-        return 1;
     }
 
     @Override
-    public int checkNickname(String nickName) {
+    public void checkNickname(String nickName) {
         // 1. 중복 체크
         boolean checkNickName = memberMapper.checkNickName(nickName);
 
@@ -45,11 +46,10 @@ public class MemberServiceImpl implements MemberService {
         if (checkNickName) {
             throw new BusinessExceptionHandler(ErrorCode.CHECK_FAIL, "사용할 수 없는 닉네임입니다");
         }
-        return 1;
     }
 
     @Override
-    public int checkEmail(String email) {
+    public void checkEmail(String email) {
         // 1. 중복 체크
         boolean checkEmail = memberMapper.checkEmail(email);
 
@@ -58,22 +58,20 @@ public class MemberServiceImpl implements MemberService {
         if (checkEmail) {
             throw new BusinessExceptionHandler(ErrorCode.CHECK_FAIL, "사용할 수 없는 이메일입니다");
         }
-        return 1;
+
     }
 
     @Override
     @Transactional
-    public int deleteRefreshToken() {
+    public void deleteRefreshToken() {
         Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
                 .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "사용자를 확인할 수 없습니다"));
 
         try {
             memberMapper.deleteRefreshToken(member.getMemberEmail());
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(e.getMessage(), e);
+            log.error(e.getMessage());
+            throw new BusinessExceptionHandler(ErrorCode.DELETE_FAIL, "로그 아웃에 실패하였습니다");
         }
-
-        return 1;
     }
 }

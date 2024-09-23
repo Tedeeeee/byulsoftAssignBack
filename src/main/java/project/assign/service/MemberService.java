@@ -4,7 +4,7 @@ package project.assign.service;
 import project.assign.dto.MemberRequestDTO;
 
 public interface MemberService {
-    int registerMember(MemberRequestDTO memberRequestDto);
+    void registerMember(MemberRequestDTO memberRequestDto);
 
     // 닉네임 중복 체크
 
@@ -15,7 +15,7 @@ public interface MemberService {
      * @author : T.S YUN
      * @param nickname
      */
-    int checkNickname(String nickname);
+    void checkNickname(String nickname);
 
     /**
      * 
@@ -24,7 +24,7 @@ public interface MemberService {
      * @author : T.S YUN
      * @param email
      */
-    int checkEmail(String email);
+    void checkEmail(String email);
 
     /**
      * 
@@ -33,5 +33,5 @@ public interface MemberService {
      * @author : T.S YUN
      * @return
      */
-    int deleteRefreshToken();
+    void deleteRefreshToken();
 }

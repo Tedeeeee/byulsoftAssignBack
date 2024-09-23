@@ -13,9 +13,4 @@ public class MemberPasswordEncoder {
     public String encode(String password) {
         return bCryptPasswordEncoder.encode(password);
     }
-
-    public boolean passwordMatch(String password, String newPassword) {
-        return bCryptPasswordEncoder.matches(password, newPassword);
-    }
-
 }

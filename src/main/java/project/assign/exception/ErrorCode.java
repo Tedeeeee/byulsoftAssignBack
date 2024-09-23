@@ -18,7 +18,11 @@ public enum ErrorCode {
     CHECK_FAIL(HttpStatus.CONFLICT,409),
     MATCH_FAIL(HttpStatus.FORBIDDEN,401),
     NOT_FOUND(HttpStatus.NOT_FOUND, 404),
-    DELETE_FAIL(HttpStatus.CONFLICT,409);
+
+    SELECT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, 500),
+    DELETE_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, 500),
+    UPDATE_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, 500),
+    INSERT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, 500);
 
     private final HttpStatus status;
     private final int stateCode;

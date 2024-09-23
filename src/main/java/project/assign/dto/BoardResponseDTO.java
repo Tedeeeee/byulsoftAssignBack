@@ -1,9 +1,6 @@
 package project.assign.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import project.assign.entity.Board;
 import project.assign.entity.BoardStar;
 import project.assign.entity.Comment;
@@ -27,11 +24,13 @@ public class BoardResponseDTO {
     private int boardLikes;
     private String boardCreatedAt;
     private String boardUpdatedAt;
+    @Setter
+    private int totalPage;
     // 여기도 DTO가 되어야 한다.
     private List<BoardStarDTO> boardStars = new ArrayList<>();
     private List<CommentDTO> comments = new ArrayList<>();
 
-    public static BoardResponseDTO from(Board board, String nickname, List<Comment> comments) {
+    public static BoardResponseDTO forBoard(Board board, String nickname, List<Comment> comments) {
         // boardStars를 DTO로 변경
         List<BoardStarDTO> boardStarDTO = new ArrayList<>();
         List<CommentDTO> commentDTO = new ArrayList<>();
@@ -56,6 +55,28 @@ public class BoardResponseDTO {
                 .boardUpdatedAt(TimeChangerUtil.timeChange(board.getBoardUpdatedAt()))
                 .boardStars(boardStarDTO)
                 .comments(commentDTO)
+                .build();
+    }
+
+    public static BoardResponseDTO forList(Board board, String nickname) {
+        // boardStars를 DTO로 변경
+        List<BoardStarDTO> boardStarDTO = new ArrayList<>();
+        for (BoardStar star : board.getStars()) {
+            boardStarDTO.add(BoardStarDTO.from(star));
+        }
+
+        return BoardResponseDTO.builder()
+                .boardId(board.getBoardId())
+                .memberNickname(nickname)
+                .boardTitle(board.getBoardTitle())
+                .boardContent(board.getBoardContent())
+                .boardRegion(board.getBoardRegion())
+                .boardView(board.getBoardView())
+                .boardLikes(board.getBoardLikes())
+                .boardCreatedAt(TimeChangerUtil.timeChange(board.getBoardCreatedAt()))
+                .boardUpdatedAt(TimeChangerUtil.timeChange(board.getBoardUpdatedAt()))
+                .boardStars(boardStarDTO)
+                .comments(null)
                 .build();
     }
 

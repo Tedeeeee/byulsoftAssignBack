@@ -53,12 +53,6 @@
         );
     </select>
 
-    <select id="findMemberIdByNickname" resultType="java.lang.Integer">
-        select member_id
-        from member
-        where member_nickname = #{memberNickname}
-    </select>
-
     <select id="findNicknameById" resultType="java.lang.String">
         select member_nickname
         from member

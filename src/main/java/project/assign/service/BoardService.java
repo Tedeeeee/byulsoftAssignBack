@@ -1,6 +1,7 @@
 package project.assign.service;
 
 
+import project.assign.dto.BoardListResponseDTO;
 import project.assign.dto.BoardRequestDTO;
 import project.assign.dto.BoardResponseDTO;
 import project.assign.dto.SearchConditionDTO;
@@ -16,12 +17,12 @@ public interface BoardService {
      * @author : T.S YUN
      * @since : 2024.09.12
      */
-    int countBoards(SearchConditionDTO searchConditionDTO);
+    //void countBoards(SearchConditionDTO searchConditionDTO);
 
     /**
      * 게시글 저장
      */
-    int saveBoard(BoardRequestDTO boardRequestDTO);
+    void saveBoard(BoardRequestDTO boardRequestDTO);
 
     /**
      *
@@ -29,7 +30,7 @@ public interface BoardService {
      * @since : 2024.09.13
      * @author : T.S YUN
      */
-    int updateBoard(BoardRequestDTO boardRequestDTO);
+    void updateBoard(BoardRequestDTO boardRequestDTO);
 
     /**
      *
@@ -37,19 +38,15 @@ public interface BoardService {
      * @since : 2024.09.11
      * @author : T.S YUN
      */
-    int deleteBoard(int boardId);
+    void deleteBoard(int boardId);
 
-    /**
-     * 게시판 글 전체 조회
-     */
-    List<BoardResponseDTO> getBasicBoard(SearchConditionDTO searchConditionDTO);
 
     /**
      * 설명 : 원하는 종류로 정렬
      * @since : 2024.09.12
      * @author : T.S YUN
      */
-    List<BoardResponseDTO> sortTypeBoard(SearchConditionDTO searchConditionDTO);
+    BoardListResponseDTO sortTypeBoard(SearchConditionDTO searchConditionDTO);
 
     /**
      * 게시글 단일 조회
