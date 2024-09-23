@@ -1,5 +1,6 @@
 package project.assign.controller;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -38,8 +39,8 @@ public class MemberController {
 
     // 로그아웃시 사용자 DB의 refreshToken삭제
     @DeleteMapping("/logout")
-    public CommonResponse<Integer> removeRefreshToken() {
-        memberService.deleteRefreshToken();
+    public CommonResponse<Integer> removeRefreshToken(HttpServletResponse response) {
+        memberService.deleteRefreshToken(response);
         return CommonResponse.createSuccess("로그아웃 되었습니다");
     }
 }

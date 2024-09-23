@@ -15,6 +15,7 @@ import java.util.List;
 public class Board {
     private Integer boardId;
     private int memberId;
+    private String memberNickname;
     private String boardTitle;
     private String boardContent;
     private String boardRegion;

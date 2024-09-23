@@ -30,7 +30,7 @@ public class BoardResponseDTO {
     private List<BoardStarDTO> boardStars = new ArrayList<>();
     private List<CommentDTO> comments = new ArrayList<>();
 
-    public static BoardResponseDTO forBoard(Board board, String nickname, List<Comment> comments) {
+    public static BoardResponseDTO forBoard(Board board, List<Comment> comments) {
         // boardStars를 DTO로 변경
         List<BoardStarDTO> boardStarDTO = new ArrayList<>();
         List<CommentDTO> commentDTO = new ArrayList<>();
@@ -45,7 +45,7 @@ public class BoardResponseDTO {
 
         return BoardResponseDTO.builder()
                 .boardId(board.getBoardId())
-                .memberNickname(nickname)
+                .memberNickname(board.getMemberNickname())
                 .boardTitle(board.getBoardTitle())
                 .boardContent(board.getBoardContent())
                 .boardRegion(board.getBoardRegion())
@@ -58,7 +58,7 @@ public class BoardResponseDTO {
                 .build();
     }
 
-    public static BoardResponseDTO forList(Board board, String nickname) {
+    public static BoardResponseDTO forList(Board board) {
         // boardStars를 DTO로 변경
         List<BoardStarDTO> boardStarDTO = new ArrayList<>();
         for (BoardStar star : board.getStars()) {
@@ -67,7 +67,7 @@ public class BoardResponseDTO {
 
         return BoardResponseDTO.builder()
                 .boardId(board.getBoardId())
-                .memberNickname(nickname)
+                .memberNickname(board.getMemberNickname())
                 .boardTitle(board.getBoardTitle())
                 .boardContent(board.getBoardContent())
                 .boardRegion(board.getBoardRegion())

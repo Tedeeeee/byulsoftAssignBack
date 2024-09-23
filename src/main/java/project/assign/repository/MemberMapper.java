@@ -14,6 +14,6 @@ public interface MemberMapper {
     Optional<String> findNicknameById(int memberId);
     Optional<Member> findMemberByEmail(String memberEmail);
     void saveRefreshToken(@Param("memberRefreshToken") String memberRefreshToken,@Param("memberEmail") String memberEmail);
-    Optional<String> findMemberByRefreshToken(String memberRefreshToken);
+    Optional<Member> findMemberByRefreshToken(String memberRefreshToken);
     void deleteRefreshToken(String memberEmail);
 }

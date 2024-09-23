@@ -5,27 +5,17 @@ import project.assign.dto.BoardListResponseDTO;
 import project.assign.dto.BoardRequestDTO;
 import project.assign.dto.BoardResponseDTO;
 import project.assign.dto.SearchConditionDTO;
-import project.assign.entity.BoardStarType;
-
-import java.util.List;
 
 public interface BoardService {
 
     /**
-     * 설명 : 페이지 수 체크
-     *
+     * 설명 : 게시글 저장
+     * @since : 2024.09.13
      * @author : T.S YUN
-     * @since : 2024.09.12
-     */
-    //void countBoards(SearchConditionDTO searchConditionDTO);
-
-    /**
-     * 게시글 저장
      */
     void saveBoard(BoardRequestDTO boardRequestDTO);
 
     /**
-     *
      * 설명 : 게시글 수정
      * @since : 2024.09.13
      * @author : T.S YUN
@@ -33,7 +23,6 @@ public interface BoardService {
     void updateBoard(BoardRequestDTO boardRequestDTO);
 
     /**
-     *
      * 설명 : 게시글 삭제 처리
      * @since : 2024.09.11
      * @author : T.S YUN
@@ -49,8 +38,9 @@ public interface BoardService {
     BoardListResponseDTO sortTypeBoard(SearchConditionDTO searchConditionDTO);
 
     /**
-     * 게시글 단일 조회
-     * 댓글이 필요하다
+     * 설명 : 특정 게시글 불러오기
+     * @since : 2024.09.12
+     * @author : T.S YUN
      */
     BoardResponseDTO findByBoardId(int boardId);
 }

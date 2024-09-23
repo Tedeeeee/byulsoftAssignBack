@@ -70,8 +70,13 @@
         where member_email = #{memberEmail} and member_is_delete = 0
     </select>
 
-    <select id="findMemberByRefreshToken" resultType="java.lang.String">
-        select member_email
+    <select id="findMemberByRefreshToken" resultMap="memberResultMap">
+        select member_id,
+               member_password,
+               member_name,
+               member_email,
+               member_phone_number,
+               member_nickname
         from member
         where member_refresh_token = #{memberRefreshToken};
     </select>

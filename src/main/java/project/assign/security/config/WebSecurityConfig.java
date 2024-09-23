@@ -62,11 +62,6 @@ public class WebSecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-//                .exceptionHandling()
-//                // 인증 실패
-//                .authenticationEntryPoint()
-//                // 인가 실패
-//                .accessDeniedHandler()
                 .addFilterAfter(customAuthenticationFilter(), LogoutFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 

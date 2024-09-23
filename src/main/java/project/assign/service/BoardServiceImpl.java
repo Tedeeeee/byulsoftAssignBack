@@ -2,12 +2,12 @@ package project.assign.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.assign.dto.*;
 import project.assign.entity.*;
 import project.assign.exception.BusinessExceptionHandler;
-import project.assign.exception.ErrorCode;
 import project.assign.repository.BoardMapper;
 import project.assign.repository.BoardStarMapper;
 import project.assign.repository.CommentMapper;
@@ -28,26 +28,12 @@ public class BoardServiceImpl implements BoardService {
     private final CommentMapper commentMapper;
     private final BoardStarMapper boardStarMapper;
 
-//    @Override
-//    public int countBoards(SearchConditionDTO searchConditionDTO) {
-//        // 특수 정렬은 사실 상관없다. 기존 검색중에 갯수가 달라질 수 있는것은 기존 검색이 달라지는 것
-//        // 별 순으로 검색하는 것은 전체 게시글을 검색하는 것과 갯수가 다를 수 없다.
-//
-//        // 갯수가 다른 것은 지역과 제목이 포함되어 있는 것을 경우 어렵다는 것
-//        // 페이지의 갯수를 세는 경우
-//        // 1. 기본 정렬 ( 특정 조건으로 정렬하는 경우 => 기본 정렬과 다를것 없다 )
-//        // 2. 검색어가 존재하면 총 갯수가 다르다.
-//        int pageCount = boardMapper.countBoards(searchConditionDTO.getSearchType(), searchConditionDTO.getSearchText());;
-//
-//        return (int) Math.ceil((double) pageCount / 5);
-//    }
-
     @Override
     @Transactional
     public void saveBoard(BoardRequestDTO boardRequestDTO) {
         // 사용자 정보는 시큐리티를 통해 확인
         Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
-                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 사용자입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 사용자입니다"));
 
         try {
             // 보드를 먼저 저장하고 key를 바로 반환
@@ -67,7 +53,7 @@ public class BoardServiceImpl implements BoardService {
 
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new BusinessExceptionHandler(ErrorCode.INSERT_FAIL, "삽입에 실패하였습니다");
+            throw new BusinessExceptionHandler(HttpStatus.INTERNAL_SERVER_ERROR, 500, "저장에 실패하였습니다");
         }
     }
 
@@ -76,14 +62,15 @@ public class BoardServiceImpl implements BoardService {
     public void updateBoard(BoardRequestDTO boardRequestDTO) {
         // 1. 수정하려는 게시글 존재 확인
         Board findBoard = boardMapper.findByBoardId(boardRequestDTO.getBoardId())
-                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 게시글입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 게시글입니다"));
 
         // 2. 사용자의 정보와 게시글에 저장된 사용자 정보 확인
         Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
-                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 회원입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 사용자입니다"));
+
 
         if (findBoard.getWriter(member.getMemberId())) {
-            throw new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 회원입니다");
+            throw new BusinessExceptionHandler(HttpStatus.BAD_REQUEST, 400, "회원의 정보가 일치하지 않습니다.");
         }
 
         try {
@@ -105,7 +92,7 @@ public class BoardServiceImpl implements BoardService {
             }
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new BusinessExceptionHandler(ErrorCode.UPDATE_FAIL, "게시글 수정에 실패하였습니다");
+            throw new BusinessExceptionHandler(HttpStatus.INTERNAL_SERVER_ERROR, 500, "게시글 수정에 실패하였습니다");
         }
     }
 
@@ -113,13 +100,13 @@ public class BoardServiceImpl implements BoardService {
     @Transactional
     public void deleteBoard(int id) {
         memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
-                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 사용자입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 사용자입니다"));
 
         try {
             boardMapper.deleteBoardById(id);
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new BusinessExceptionHandler(ErrorCode.DELETE_FAIL, "게시글 삭제를 실패하였습니다");
+            throw new BusinessExceptionHandler(HttpStatus.INTERNAL_SERVER_ERROR, 500, "게시글 삭제를 실패하였습니다");
         }
     }
 
@@ -140,17 +127,17 @@ public class BoardServiceImpl implements BoardService {
 
             // 정렬된 id를 기준으로 데이터 리스트화 하기
             List<BoardResponseDTO> boardResponseDTOList = sortedBoardIdList.stream().map(boardId -> {
-                        String nickname = memberMapper.findNicknameById(boardId)
-                                .orElse("미상");
+/*                        String nickname = memberMapper.findNicknameById(boardId)
+                                .orElse("미상");*/
 
-                        return BoardResponseDTO.forList(sortBoardIdListMap.get(boardId), nickname);
+                        return BoardResponseDTO.forList(sortBoardIdListMap.get(boardId));
                     })
                     .toList();
 
             return BoardListResponseDTO.from(boardResponseDTOList, totalPageCnt);
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new BusinessExceptionHandler(ErrorCode.SELECT_FAIL, "게시글 로딩에 실패하였습니다");
+            throw new BusinessExceptionHandler(HttpStatus.INTERNAL_SERVER_ERROR, 500, "게시글 로딩에 실패하였습니다");
         }
     }
 
@@ -158,17 +145,14 @@ public class BoardServiceImpl implements BoardService {
     @Override
     public BoardResponseDTO findByBoardId(int boardId) {
         Board board = boardMapper.findByBoardId(boardId)
-                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 게시글입니다"));
-
-        String nickname = memberMapper.findNicknameById(board.getMemberId())
-                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 회원입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 게시글입니다"));
 
         try{
             List<Comment> commentList = commentMapper.findByBoardId(boardId);
-            return BoardResponseDTO.forBoard(board, nickname, commentList);
+            return BoardResponseDTO.forBoard(board, commentList);
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new BusinessExceptionHandler(ErrorCode.SELECT_FAIL, "게시글 로딩에 실패하였습니다");
+            throw new BusinessExceptionHandler(HttpStatus.INTERNAL_SERVER_ERROR, 500, "게시글 로딩에 실패하였습니다");
         }
     }
 
@@ -176,7 +160,6 @@ public class BoardServiceImpl implements BoardService {
         if (searchConditionDTO.isSortOrderEmpty()) {
             return boardMapper.getBasicBoardIdList(searchConditionDTO);
         }
-
         return boardStarMapper.sortBoardIdByStarType(searchConditionDTO);
     }
 

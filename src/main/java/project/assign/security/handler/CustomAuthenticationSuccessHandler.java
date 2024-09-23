@@ -4,13 +4,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import project.assign.dto.MemberResponseDTO;
 import project.assign.entity.Member;
 import project.assign.exception.BusinessExceptionHandler;
-import project.assign.exception.ErrorCode;
 import project.assign.repository.MemberMapper;
 import project.assign.security.service.TokenService;
 import project.assign.security.util.TokenUtil;
@@ -36,7 +36,7 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         // 이슈 : AccessToken이 만료되는 시점에서 더 이상 claim조차 확인이 불가능하기 때문에 refreshToken을 요청해야 한다.
         //Member member = memberCheck.findByEmail(memberEmail);
         Member member = memberMapper.findMemberByEmail(memberEmail)
-                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "존재하지 않는 회원입니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 사용자입니다"));
 
         MemberResponseDTO memberResponseDTO = new MemberResponseDTO();
         MemberResponseDTO memberResponse = memberResponseDTO.from(member);

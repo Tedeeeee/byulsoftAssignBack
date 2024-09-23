@@ -10,7 +10,6 @@ public class CommonResponse<T> {
     private final T body;
     private final String message;
 
-    @Builder
     public CommonResponse(final int statusCode, final T body, final String message) {
         this.statusCode = statusCode;
         this.body = body;

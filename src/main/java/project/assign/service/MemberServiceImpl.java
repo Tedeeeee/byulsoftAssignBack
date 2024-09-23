@@ -1,15 +1,19 @@
 package project.assign.service;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.assign.entity.Member;
 import project.assign.dto.MemberRequestDTO;
 import project.assign.exception.BusinessExceptionHandler;
-import project.assign.exception.ErrorCode;
 import project.assign.repository.MemberMapper;
+import project.assign.security.service.TokenService;
 import project.assign.util.SecurityUtil;
 
 @Service
@@ -32,46 +36,55 @@ public class MemberServiceImpl implements MemberService {
             memberMapper.save(member);
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new BusinessExceptionHandler(ErrorCode.INSERT_FAIL, "회원 등록에 실패하였습니다");
+            throw new BusinessExceptionHandler(HttpStatus.INTERNAL_SERVER_ERROR, 500, "회원 등록에 실패하였습니다");
         }
     }
 
     @Override
     public void checkNickname(String nickName) {
-        // 1. 중복 체크
         boolean checkNickName = memberMapper.checkNickName(nickName);
 
-        // 2. 닉네임 글자수, 특수 문자 제한
-
         if (checkNickName) {
-            throw new BusinessExceptionHandler(ErrorCode.CHECK_FAIL, "사용할 수 없는 닉네임입니다");
+            throw new BusinessExceptionHandler(HttpStatus.CONFLICT,409, "사용할 수 없는 닉네임입니다");
         }
     }
 
     @Override
     public void checkEmail(String email) {
-        // 1. 중복 체크
         boolean checkEmail = memberMapper.checkEmail(email);
 
-        // 2. 특수문자 및 글자 수 제한
-
         if (checkEmail) {
-            throw new BusinessExceptionHandler(ErrorCode.CHECK_FAIL, "사용할 수 없는 이메일입니다");
+            throw new BusinessExceptionHandler(HttpStatus.CONFLICT,409, "사용할 수 없는 이메일입니다");
         }
-
     }
 
     @Override
     @Transactional
-    public void deleteRefreshToken() {
+    public void deleteRefreshToken(HttpServletResponse response) {
         Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
-                .orElseThrow(() -> new BusinessExceptionHandler(ErrorCode.NOT_FOUND, "사용자를 확인할 수 없습니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "사용자를 확인할 수 없습니다"));
 
         try {
             memberMapper.deleteRefreshToken(member.getMemberEmail());
+
+            ResponseCookie accessCookie = ResponseCookie.from(TokenService.ACCESS_TOKEN_SUBJECT, null)
+                    .httpOnly(true)
+                    .path("/")
+                    .maxAge(0)
+                    .build();
+
+            ResponseCookie refreshCookie = ResponseCookie.from(TokenService.REFRESH_TOKEN_SUBJECT, null)
+                    .httpOnly(true)
+                    .path("/")
+                    .maxAge(0)
+                    .build();
+
+            response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+            response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new BusinessExceptionHandler(ErrorCode.DELETE_FAIL, "로그 아웃에 실패하였습니다");
+            throw new BusinessExceptionHandler(HttpStatus.CONFLICT, 409, "로그 아웃에 실패하였습니다");
         }
     }
 }

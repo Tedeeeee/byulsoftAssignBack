@@ -30,11 +30,6 @@ public class BoardRequestDTO {
     private List<BoardStarDTO> boardStars = new ArrayList<>();
     private List<CommentDTO> comments = new ArrayList<>();
 
-    private int boardView;
-    private int boardLikes;
-    private String boardCreatedAt;
-    private String boardUpdatedAt;
-
     public Board toEntity(int memberId) {
         return  Board.builder()
                 .boardId(boardId)

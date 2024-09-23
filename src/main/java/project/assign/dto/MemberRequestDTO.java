@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import project.assign.entity.Member;
-import project.assign.service.MemberPasswordEncoder;
 
 @Getter
 @AllArgsConstructor
@@ -21,10 +20,12 @@ public class MemberRequestDTO {
 
     @NotBlank(message = "닉네임을 작성해주세요")
     @Size(max = 10, message = "닉네임은 10글자 이하로 작성해주세요")
+    @Pattern(regexp = "^[a-zA-Z가-힣]+$", message = "닉네임은 한글과 영문만 입력 가능합니다")
     private String memberNickname;
 
     @NotBlank(message = "이름을 작성해주세요")
     @Size(max = 18, message = "이름은 18글자 이하로 작성해주세요")
+    @Pattern(regexp = "^[a-zA-Z가-힣]+$", message = "이름은 한글과 영문만 입력 가능합니다")
     private String memberName;
 
     @NotBlank(message = "핸드폰 번호를 입력해주세요")

@@ -5,19 +5,18 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
-import project.assign.exception.ErrorCode;
 
 @Getter
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor
 public class ErrorResponse {
     private HttpStatus status;
     private int statusCode;
     private String message;
 
     @Builder
-    public ErrorResponse(final ErrorCode errorCode, String message) {
-        this.status = errorCode.getStatus();
-        this.statusCode = errorCode.getStateCode();
+    public ErrorResponse(final HttpStatus httpStatus, final int statusCode, final String message) {
+        this.status = httpStatus;
+        this.statusCode = statusCode;
         this.message = message;
     }
 }
