@@ -40,13 +40,12 @@ public class BoardServiceImpl implements BoardService {
         Board board = boardRequestDTO.toEntity(member.getMemberId());
         boardMapper.boardSave(board);
 
-        int boardId = board.getBoardId();
-
         // 먼저 저장된 boardId를 가지고 각 boardStar 들을 저장
         List<BoardStarDTO> boardStars = boardRequestDTO.getBoardStars();
 
         List<BoardStar> boardStarList = new ArrayList<>();
-        for (int i = 0; i < boardStars.size(); i++) {
+        int size = boardStars.size();
+        for (int i = 0; i < size; i++) {
             BoardStar boardStar = boardStars.get(i).toEntity(board.getBoardId(), i + 1);
             boardStarList.add(boardStar);
         }
@@ -108,6 +107,11 @@ public class BoardServiceImpl implements BoardService {
     @Override
     public BoardListResponseDTO sortTypeBoard(SearchConditionDTO searchConditionDTO) {
         int totalPageCnt = totalPageCount(searchConditionDTO);
+
+        // 페이지는 검색 조건에 맞는 갯수보다 많을 수 없다.
+        if (totalPageCnt < searchConditionDTO.getPageNumber()) {
+            throw new BusinessExceptionHandler(HttpStatus.BAD_REQUEST, 400, "검색 조건에 오류가 있습니다");
+        }
 
         // 특정 기준으로 정렬하는 메소드
         List<Integer> sortedBoardIdList = getSortedBoardIdList(searchConditionDTO);

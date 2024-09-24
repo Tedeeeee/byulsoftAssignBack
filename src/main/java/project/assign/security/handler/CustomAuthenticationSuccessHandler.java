@@ -38,10 +38,7 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         Member member = memberMapper.findMemberByEmail(memberEmail)
                 .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 사용자입니다"));
 
-        MemberResponseDTO memberResponseDTO = new MemberResponseDTO();
-        MemberResponseDTO memberResponse = memberResponseDTO.from(member);
-
-        tokenUtil.sendTokens(response, accessToken, refreshToken, memberResponse);
+        tokenUtil.sendTokens(response, accessToken, refreshToken, MemberResponseDTO.from(member));
 
         // refreshToken 을 저장하는 로직이 필요
         memberMapper.saveRefreshToken(refreshToken, memberEmail);

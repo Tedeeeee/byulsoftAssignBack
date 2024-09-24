@@ -46,7 +46,6 @@ public class TokenUtil {
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-        // 사용자의 정보를 vue 에서 전역으로 관리를 하기 위해 전송
         String memberInfo = objectMapper.writeValueAsString(CommonResponse.success(memberResponseDTO, ""));
         response.getWriter().write(memberInfo);
 

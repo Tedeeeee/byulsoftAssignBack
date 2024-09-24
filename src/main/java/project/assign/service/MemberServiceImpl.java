@@ -15,6 +15,9 @@ import project.assign.mapper.MemberMapper;
 import project.assign.security.service.TokenService;
 import project.assign.util.SecurityUtil;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -36,6 +39,10 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public void checkNickname(String nickName) {
+        if (!Pattern.matches("^[a-zA-Z가-힣]+$", nickName)) {
+            throw new BusinessExceptionHandler(HttpStatus.BAD_REQUEST, 400, "사용할 수 없는 닉네임입니다");
+        }
+
         boolean checkNickName = memberMapper.checkNickName(nickName);
 
         if (checkNickName) {
@@ -45,6 +52,10 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public void checkEmail(String email) {
+        if (!Pattern.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", email)) {
+            throw new BusinessExceptionHandler(HttpStatus.BAD_REQUEST, 400, "사용할 수 없는 이메일입니다");
+        }
+
         boolean checkEmail = memberMapper.checkEmail(email);
 
         if (checkEmail) {

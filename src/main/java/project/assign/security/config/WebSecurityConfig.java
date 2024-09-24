@@ -23,7 +23,6 @@ import project.assign.security.filter.CustomAuthenticationFilter;
 import project.assign.security.filter.JwtAuthenticationFilter;
 import project.assign.security.handler.CustomAccessDeniedHandler;
 import project.assign.security.handler.CustomAuthenticationEntryPoint;
-import project.assign.security.handler.CustomAuthenticationFailureHandler;
 import project.assign.security.handler.CustomAuthenticationSuccessHandler;
 import project.assign.security.provider.CustomAuthenticationProvider;
 import project.assign.security.service.CustomUserDetailService;
@@ -53,8 +52,8 @@ public class WebSecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
 
-                // 검사
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/members/register").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/members/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/boards/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
@@ -110,16 +109,10 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public CustomAuthenticationFailureHandler customAuthenticationFailureHandler() {
-        return new CustomAuthenticationFailureHandler(objectMapper);
-    }
-
-    @Bean
     public CustomAuthenticationFilter customAuthenticationFilter() {
         CustomAuthenticationFilter customAuthenticationFilter =  new CustomAuthenticationFilter(authenticationManager(), objectMapper);
         customAuthenticationFilter.setFilterProcessesUrl("/api/login");
         customAuthenticationFilter.setAuthenticationSuccessHandler(customAuthenticationSuccessHandler());
-        customAuthenticationFilter.setAuthenticationFailureHandler(customAuthenticationFailureHandler());
         customAuthenticationFilter.afterPropertiesSet();
         return customAuthenticationFilter;
     }
