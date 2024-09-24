@@ -9,8 +9,8 @@ import project.assign.dto.CommentDTO;
 import project.assign.entity.Comment;
 import project.assign.entity.Member;
 import project.assign.exception.BusinessExceptionHandler;
-import project.assign.repository.CommentMapper;
-import project.assign.repository.MemberMapper;
+import project.assign.mapper.CommentMapper;
+import project.assign.mapper.MemberMapper;
 import project.assign.util.SecurityUtil;
 
 import java.util.List;
@@ -33,13 +33,10 @@ public class CommentServiceImpl implements CommentService {
 
         // DTO -> Entity
         Comment comment = commentDTO.toEntity();
-        try{
-            commentMapper.saveComment(comment);
-            List<Comment> comments = commentMapper.findByBoardId(comment.getBoardId());
-            return comments.stream().map(CommentDTO::from).toList();
-        } catch (Exception e) {
-            throw new BusinessExceptionHandler(HttpStatus.INTERNAL_SERVER_ERROR, 500, "댓글 등록을 실패하였습니다");
-        }
+
+        commentMapper.saveComment(comment);
+        List<Comment> comments = commentMapper.findByBoardId(comment.getBoardId());
+        return comments.stream().map(CommentDTO::from).toList();
     }
 
     @Override
@@ -64,12 +61,7 @@ public class CommentServiceImpl implements CommentService {
             throw new BusinessExceptionHandler(HttpStatus.BAD_REQUEST, 400, "회원의 정보가 일치하지 않습니다.");
         }
 
-        try {
-            commentMapper.deleteByCommentId(commentId);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new BusinessExceptionHandler(HttpStatus.INTERNAL_SERVER_ERROR, 500, "삭제에 실패하였습니다");
-        }
+        commentMapper.deleteByCommentId(commentId);
     }
 
     @Override
@@ -84,14 +76,9 @@ public class CommentServiceImpl implements CommentService {
             throw new BusinessExceptionHandler(HttpStatus.BAD_REQUEST, 400, "회원의 정보가 일치하지 않습니다.");
         }
 
-        try {
-            commentMapper.changeComment(commentDTO.getCommentId(), commentDTO.getCommentContent());
+        commentMapper.changeComment(commentDTO.getCommentId(), commentDTO.getCommentContent());
 
-            List<Comment> comments = commentMapper.findByBoardId(commentDTO.getBoardId());
-            return comments.stream().map(CommentDTO::from).toList();
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new BusinessExceptionHandler(HttpStatus.INTERNAL_SERVER_ERROR, 500, "수정에 실패하였습니다");
-        }
+        List<Comment> comments = commentMapper.findByBoardId(commentDTO.getBoardId());
+        return comments.stream().map(CommentDTO::from).toList();
     }
 }

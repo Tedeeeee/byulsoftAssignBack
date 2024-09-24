@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class BoardResponseDTO {
+public class BoardDetailResponseDTO {
     private int boardId;
     private String memberNickname;
     private String boardTitle;
@@ -28,15 +28,22 @@ public class BoardResponseDTO {
     private int totalPage;
     // 여기도 DTO가 되어야 한다.
     private List<BoardStarDTO> boardStars = new ArrayList<>();
+    private List<CommentDTO> comments = new ArrayList<>();
 
-    public static BoardResponseDTO from(Board board) {
+    public static BoardDetailResponseDTO from(Board board, List<Comment> comments) {
         // boardStars를 DTO로 변경
         List<BoardStarDTO> boardStarDTO = new ArrayList<>();
+        List<CommentDTO> commentDTO = new ArrayList<>();
         for (BoardStar star : board.getStars()) {
             boardStarDTO.add(BoardStarDTO.from(star));
         }
+        if (comments != null) {
+            for (Comment comment : comments) {
+                commentDTO.add(CommentDTO.from(comment));
+            }
+        }
 
-        return BoardResponseDTO.builder()
+        return BoardDetailResponseDTO.builder()
                 .boardId(board.getBoardId())
                 .memberNickname(board.getMemberNickname())
                 .boardTitle(board.getBoardTitle())
@@ -47,6 +54,7 @@ public class BoardResponseDTO {
                 .boardCreatedAt(TimeChangerUtil.timeChange(board.getBoardCreatedAt()))
                 .boardUpdatedAt(TimeChangerUtil.timeChange(board.getBoardUpdatedAt()))
                 .boardStars(boardStarDTO)
+                .comments(commentDTO)
                 .build();
     }
 }

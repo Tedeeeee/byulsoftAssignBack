@@ -84,7 +84,7 @@ public class TokenUtil {
     // 토큰 유효성 검증
     public boolean isValidToken(String token) {
         try {
-            Claims claims = getClaimsFromToken(token)
+            getClaimsFromToken(token)
                     .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.UNAUTHORIZED, 401,  "토큰이 존재하지 않습니다"));
 
             return true;

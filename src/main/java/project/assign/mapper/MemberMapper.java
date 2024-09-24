@@ -1,4 +1,4 @@
-package project.assign.repository;
+package project.assign.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

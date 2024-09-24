@@ -7,7 +7,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import project.assign.entity.Member;
-import project.assign.repository.MemberMapper;
+import project.assign.mapper.MemberMapper;
 
 @Service
 @RequiredArgsConstructor

@@ -1,10 +1,7 @@
 package project.assign.service;
 
 
-import project.assign.dto.BoardListResponseDTO;
-import project.assign.dto.BoardRequestDTO;
-import project.assign.dto.BoardResponseDTO;
-import project.assign.dto.SearchConditionDTO;
+import project.assign.dto.*;
 
 public interface BoardService {
 
@@ -42,5 +39,5 @@ public interface BoardService {
      * @since : 2024.09.12
      * @author : T.S YUN
      */
-    BoardResponseDTO findByBoardId(int boardId);
+    BoardDetailResponseDTO findByBoardId(int boardId);
 }

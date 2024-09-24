@@ -13,4 +13,8 @@ public class MemberPasswordEncoder {
     public String encode(String password) {
         return bCryptPasswordEncoder.encode(password);
     }
+
+    public boolean matches(String rawPassword, String encodedPassword) {
+        return bCryptPasswordEncoder.matches(rawPassword, encodedPassword);
+    }
 }

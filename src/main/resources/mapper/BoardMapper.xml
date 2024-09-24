@@ -3,7 +3,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="project.assign.repository.BoardMapper">
+<mapper namespace="project.assign.mapper.BoardMapper">
     
     <resultMap id="boardResultMap" type="project.assign.entity.Board">
         <id property="boardId" column="board_id" />
@@ -74,6 +74,14 @@
             false
         )
     </insert>
+
+    <select id="existBoard" resultType="java.lang.Boolean">
+        select exists(
+            select 1
+            from board
+            where board_id = #{boardId}
+        );
+    </select>
 
     <update id="boardUpdate">
         UPDATE board

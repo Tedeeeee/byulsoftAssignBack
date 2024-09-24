@@ -18,14 +18,18 @@ import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import project.assign.repository.MemberMapper;
+import project.assign.mapper.MemberMapper;
 import project.assign.security.filter.CustomAuthenticationFilter;
 import project.assign.security.filter.JwtAuthenticationFilter;
+import project.assign.security.handler.CustomAccessDeniedHandler;
+import project.assign.security.handler.CustomAuthenticationEntryPoint;
+import project.assign.security.handler.CustomAuthenticationFailureHandler;
 import project.assign.security.handler.CustomAuthenticationSuccessHandler;
 import project.assign.security.provider.CustomAuthenticationProvider;
 import project.assign.security.service.CustomUserDetailService;
 import project.assign.security.service.TokenService;
 import project.assign.security.util.TokenUtil;
+import project.assign.service.MemberPasswordEncoder;
 
 import java.util.List;
 
@@ -38,9 +42,6 @@ public class WebSecurityConfig {
     private final ObjectMapper objectMapper;
     private final TokenUtil tokenUtil;
     private final TokenService tokenService;
-    //private final MemberCheck memberCheck;
-    //private final MemberService memberService;
-    //private final MemberPasswordEncoder memberPasswordEncoder;
     private final MemberMapper memberMapper;
 
     @Bean
@@ -59,6 +60,11 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
                         .anyRequest().authenticated())
 
+                .exceptionHandling((exception) -> {
+                    exception.authenticationEntryPoint(customAuthenticationEntryPoint());
+                    exception.accessDeniedHandler(customAccessDeniedHandler());
+                })
+
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
@@ -74,14 +80,28 @@ public class WebSecurityConfig {
     }
 
     @Bean
+    public MemberPasswordEncoder memberPasswordEncoder() {
+        return new MemberPasswordEncoder(bCryptPasswordEncoder());
+    }
+
+    @Bean
     public AuthenticationManager authenticationManager() {
         return new ProviderManager(customAuthenticationProvider());
     }
 
     @Bean
+    public CustomAuthenticationEntryPoint customAuthenticationEntryPoint() {
+        return new CustomAuthenticationEntryPoint(objectMapper);
+    }
+
+    @Bean
+    public CustomAccessDeniedHandler customAccessDeniedHandler() {
+        return new CustomAccessDeniedHandler(objectMapper);
+    }
+
+    @Bean
     public CustomAuthenticationProvider customAuthenticationProvider() {
-        // 의존성 문제로 memberPasswordEncoder에서 bcrypt로 변경
-        return new CustomAuthenticationProvider(customUserDetailService, bCryptPasswordEncoder());
+        return new CustomAuthenticationProvider(customUserDetailService, memberPasswordEncoder());
     }
 
     @Bean
@@ -90,10 +110,16 @@ public class WebSecurityConfig {
     }
 
     @Bean
+    public CustomAuthenticationFailureHandler customAuthenticationFailureHandler() {
+        return new CustomAuthenticationFailureHandler(objectMapper);
+    }
+
+    @Bean
     public CustomAuthenticationFilter customAuthenticationFilter() {
         CustomAuthenticationFilter customAuthenticationFilter =  new CustomAuthenticationFilter(authenticationManager(), objectMapper);
         customAuthenticationFilter.setFilterProcessesUrl("/api/login");
         customAuthenticationFilter.setAuthenticationSuccessHandler(customAuthenticationSuccessHandler());
+        customAuthenticationFilter.setAuthenticationFailureHandler(customAuthenticationFailureHandler());
         customAuthenticationFilter.afterPropertiesSet();
         return customAuthenticationFilter;
     }

@@ -4,10 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import project.assign.commonApi.CommonResponse;
-import project.assign.dto.BoardListResponseDTO;
-import project.assign.dto.BoardRequestDTO;
-import project.assign.dto.BoardResponseDTO;
-import project.assign.dto.SearchConditionDTO;
+import project.assign.dto.*;
 import project.assign.service.BoardService;
 
 import java.util.List;
@@ -18,15 +15,6 @@ import java.util.List;
 public class BoardController {
 
     private final BoardService boardService;
-
-//    // 총 페이지 확인
-//    @GetMapping("/count")
-//    public CommonResponse<Integer> countPage(@RequestParam(name = "searchType") String searchType,
-//                                             @RequestParam(name = "searchText") String searchText) {
-//        SearchConditionDTO searchConditionDTO = new SearchConditionDTO(null, null, 0, searchType, searchText);
-//        int pageCount = boardService.countBoards(searchConditionDTO);
-//        return new CommonResponse<>(200, pageCount);
-//    }
 
     // 게시글 저장 ( 인가 )
     @PostMapping("")
@@ -57,8 +45,8 @@ public class BoardController {
 
     // 특정 ID를 가진 게시글 가져오기
     @GetMapping("/{id}")
-    public CommonResponse<BoardResponseDTO> getBoard(@PathVariable int id) {
-        BoardResponseDTO board = boardService.findByBoardId(id);
+    public CommonResponse<BoardDetailResponseDTO> getBoard(@PathVariable int id) {
+        BoardDetailResponseDTO board = boardService.findByBoardId(id);
         return CommonResponse.success(board, "");
     }
 

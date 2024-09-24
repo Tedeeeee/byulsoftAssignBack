@@ -1,6 +1,5 @@
 package project.assign.commonApi;
 
-import lombok.Builder;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
@@ -14,11 +13,6 @@ public class CommonResponse<T> {
         this.statusCode = statusCode;
         this.body = body;
         this.message = message;
-    }
-
-    @Builder
-    public CommonResponse(final int statusCode, final T body) {
-        this(statusCode, body, null);
     }
 
     public static <T> CommonResponse<T> success(final T body, final String message) {

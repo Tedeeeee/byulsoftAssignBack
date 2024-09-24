@@ -11,7 +11,7 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import project.assign.dto.MemberResponseDTO;
 import project.assign.entity.Member;
 import project.assign.exception.BusinessExceptionHandler;
-import project.assign.repository.MemberMapper;
+import project.assign.mapper.MemberMapper;
 import project.assign.security.service.TokenService;
 import project.assign.security.util.TokenUtil;
 

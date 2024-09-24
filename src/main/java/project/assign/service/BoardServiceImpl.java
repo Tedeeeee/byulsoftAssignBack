@@ -8,10 +8,10 @@ import org.springframework.transaction.annotation.Transactional;
 import project.assign.dto.*;
 import project.assign.entity.*;
 import project.assign.exception.BusinessExceptionHandler;
-import project.assign.repository.BoardMapper;
-import project.assign.repository.BoardStarMapper;
-import project.assign.repository.CommentMapper;
-import project.assign.repository.MemberMapper;
+import project.assign.mapper.BoardMapper;
+import project.assign.mapper.BoardStarMapper;
+import project.assign.mapper.CommentMapper;
+import project.assign.mapper.MemberMapper;
 import project.assign.util.SecurityUtil;
 
 import java.util.*;
@@ -35,26 +35,22 @@ public class BoardServiceImpl implements BoardService {
         Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
                 .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 사용자입니다"));
 
-        try {
-            // 보드를 먼저 저장하고 key를 바로 반환
-            // useGeneratedKeys="true" keyProperty="boardId"
-            Board board = boardRequestDTO.toEntity(member.getMemberId());
-            boardMapper.boardSave(board);
+        // 보드를 먼저 저장하고 key를 바로 반환
+        // useGeneratedKeys="true" keyProperty="boardId"
+        Board board = boardRequestDTO.toEntity(member.getMemberId());
+        boardMapper.boardSave(board);
 
-            int boardId = board.getBoardId();
+        int boardId = board.getBoardId();
 
-            // 먼저 저장된 boardId를 가지고 각 boardStar 들을 저장
-            List<BoardStarDTO> boardStars = boardRequestDTO.getBoardStars();
-            for (int i = 0; i < boardStars.size(); i++) {
-                // 불러온 값에는 boardId 와 sort_no가 존재하지 않기 때문에 만들어주어야 한다.
-                BoardStar boardStar = boardStars.get(i).toEntity(boardId, i + 1);
-                boardStarMapper.boardStarSave(boardStar);
-            }
+        // 먼저 저장된 boardId를 가지고 각 boardStar 들을 저장
+        List<BoardStarDTO> boardStars = boardRequestDTO.getBoardStars();
 
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new BusinessExceptionHandler(HttpStatus.INTERNAL_SERVER_ERROR, 500, "저장에 실패하였습니다");
+        List<BoardStar> boardStarList = new ArrayList<>();
+        for (int i = 0; i < boardStars.size(); i++) {
+            BoardStar boardStar = boardStars.get(i).toEntity(board.getBoardId(), i + 1);
+            boardStarList.add(boardStar);
         }
+        boardStarMapper.boardStarSaveAll(boardStarList);
     }
 
     @Override
@@ -73,27 +69,25 @@ public class BoardServiceImpl implements BoardService {
             throw new BusinessExceptionHandler(HttpStatus.BAD_REQUEST, 400, "회원의 정보가 일치하지 않습니다.");
         }
 
-        try {
-            // 해당 게시글을 수정하기 위한 새로운 board 객체
-            // 게시글을 수정하는 방법은 변경 체크가 아닌 모든것을 새롭게 데이터를 구성하기 때문에 put method 사용
-            Board board = boardRequestDTO.toEntity(member.getMemberId());
+        // 해당 게시글을 수정하기 위한 새로운 board 객체
+        // 게시글을 수정하는 방법은 변경 체크가 아닌 모든것을 새롭게 데이터를 구성하기 때문에 put method 사용
+        Board board = boardRequestDTO.toEntity(member.getMemberId());
 
-            // 변경된 데이터 보드에 먼저 update
-            boardMapper.boardUpdate(board);
-            // 각 boardStar 관련 데이터 다시 저장 -> 기존의 관련 boardStar를 모두 삭제하고 다시 저장
-            // 데이터의 일관성이 중요한 작업이기에 삭제 후 다시 저장으로 진행한다.
-            boardStarMapper.deleteBoardStarByBoardId(board.getBoardId());
+        // 변경된 데이터 보드에 먼저 update
+        boardMapper.boardUpdate(board);
+        // 각 boardStar 관련 데이터 다시 저장 -> 기존의 관련 boardStar를 모두 삭제하고 다시 저장
+        // 데이터의 일관성이 중요한 작업이기에 삭제 후 다시 저장으로 진행한다.
+        boardStarMapper.deleteBoardStarByBoardId(board.getBoardId());
 
-            // 별들을 다시 저장
-            List<BoardStarDTO> boardStars = boardRequestDTO.getBoardStars();
-            for (int i = 0; i < boardStars.size(); i++) {
-                BoardStar boardStar = boardStars.get(i).toEntity(board.getBoardId(), i + 1);
-                boardStarMapper.boardStarSave(boardStar);
-            }
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new BusinessExceptionHandler(HttpStatus.INTERNAL_SERVER_ERROR, 500, "게시글 수정에 실패하였습니다");
+        // 별들을 다시 저장
+        List<BoardStarDTO> boardStars = boardRequestDTO.getBoardStars();
+
+        List<BoardStar> boardStarList = new ArrayList<>();
+        for (int i = 0; i < boardStars.size(); i++) {
+            BoardStar boardStar = boardStars.get(i).toEntity(board.getBoardId(), i + 1);
+            boardStarList.add(boardStar);
         }
+        boardStarMapper.boardStarSaveAll(boardStarList);
     }
 
     @Override
@@ -102,58 +96,44 @@ public class BoardServiceImpl implements BoardService {
         memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
                 .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 사용자입니다"));
 
-        try {
-            boardMapper.deleteBoardById(id);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new BusinessExceptionHandler(HttpStatus.INTERNAL_SERVER_ERROR, 500, "게시글 삭제를 실패하였습니다");
+        // board가 존재하지 않는 경우
+        if (!boardMapper.existBoard(id)) {
+            throw new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 게시글입니다");
         }
+
+        boardMapper.deleteBoardById(id);
     }
 
     // 조건이 담긴 정렬의 서비스
     @Override
     public BoardListResponseDTO sortTypeBoard(SearchConditionDTO searchConditionDTO) {
-        try {
-            int totalPageCnt = totalPageCount(searchConditionDTO);
+        int totalPageCnt = totalPageCount(searchConditionDTO);
 
-            // 특정 기준으로 정렬하는 메소드
-            List<Integer> sortedBoardIdList = getSortedBoardIdList(searchConditionDTO);
+        // 특정 기준으로 정렬하는 메소드
+        List<Integer> sortedBoardIdList = getSortedBoardIdList(searchConditionDTO);
 
-            // 정렬된 Board 들의 ID 리스트를 가지고 데이터를 가져온후에 Map형태로 저장한다.
-            List<Board> boardList = boardMapper.getBoardListBySort(sortedBoardIdList);
-            // Map 형태로 저장
-            Map<Integer, Board> sortBoardIdListMap = boardList.stream()
-                    .collect(Collectors.toMap(Board::getBoardId, Function.identity()));
+        // 정렬된 Board 들의 ID 리스트를 가지고 데이터를 가져온후에 Map형태로 저장한다.
+        List<Board> boardList = boardMapper.getBoardListBySort(sortedBoardIdList);
+        // Map 형태로 저장
+        Map<Integer, Board> sortBoardIdListMap = boardList.stream()
+                .collect(Collectors.toMap(Board::getBoardId, Function.identity()));
 
-            // 정렬된 id를 기준으로 데이터 리스트화 하기
-            List<BoardResponseDTO> boardResponseDTOList = sortedBoardIdList.stream().map(boardId -> {
-/*                        String nickname = memberMapper.findNicknameById(boardId)
-                                .orElse("미상");*/
+        // 정렬된 id를 기준으로 데이터 리스트화 하기
+        List<BoardResponseDTO> boardResponseDTOList = sortedBoardIdList.stream()
+                .map(boardId -> BoardResponseDTO.from(sortBoardIdListMap.get(boardId)))
+                .toList();
 
-                        return BoardResponseDTO.forList(sortBoardIdListMap.get(boardId));
-                    })
-                    .toList();
-
-            return BoardListResponseDTO.from(boardResponseDTOList, totalPageCnt);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new BusinessExceptionHandler(HttpStatus.INTERNAL_SERVER_ERROR, 500, "게시글 로딩에 실패하였습니다");
-        }
+        return BoardListResponseDTO.from(boardResponseDTOList, totalPageCnt);
     }
 
     // 특정 게시글 가져오기 ( 댓글 같이 가져오기 )
     @Override
-    public BoardResponseDTO findByBoardId(int boardId) {
+    public BoardDetailResponseDTO findByBoardId(int boardId) {
         Board board = boardMapper.findByBoardId(boardId)
                 .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 게시글입니다"));
 
-        try{
-            List<Comment> commentList = commentMapper.findByBoardId(boardId);
-            return BoardResponseDTO.forBoard(board, commentList);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new BusinessExceptionHandler(HttpStatus.INTERNAL_SERVER_ERROR, 500, "게시글 로딩에 실패하였습니다");
-        }
+        List<Comment> commentList = commentMapper.findByBoardId(boardId);
+        return BoardDetailResponseDTO.from(board, commentList);
     }
 
     private List<Integer> getSortedBoardIdList(SearchConditionDTO searchConditionDTO) {
