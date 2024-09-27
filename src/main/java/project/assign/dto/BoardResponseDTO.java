@@ -26,7 +26,6 @@ public class BoardResponseDTO {
     private String boardUpdatedAt;
     @Setter
     private int totalPage;
-    // 여기도 DTO가 되어야 한다.
     private List<BoardStarDTO> boardStars = new ArrayList<>();
 
     public static BoardResponseDTO from(Board board) {

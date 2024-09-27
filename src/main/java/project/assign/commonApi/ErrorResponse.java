@@ -1,6 +1,5 @@
 package project.assign.commonApi;
 
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +12,6 @@ public class ErrorResponse {
     private int statusCode;
     private String message;
 
-    @Builder
     public ErrorResponse(final HttpStatus httpStatus, final int statusCode, final String message) {
         this.status = httpStatus;
         this.statusCode = statusCode;

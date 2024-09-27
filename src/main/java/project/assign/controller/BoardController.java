@@ -7,8 +7,6 @@ import project.assign.commonApi.CommonResponse;
 import project.assign.dto.*;
 import project.assign.service.BoardService;
 
-import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/boards")

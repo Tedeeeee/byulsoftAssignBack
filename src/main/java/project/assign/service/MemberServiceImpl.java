@@ -29,6 +29,7 @@ public class MemberServiceImpl implements MemberService {
     @Transactional
     @Override
     public void registerMember(MemberRequestDTO memberRequestDto) {
+
         checkEmail(memberRequestDto.getMemberEmail());
         checkNickname(memberRequestDto.getMemberNickname());
 
@@ -83,7 +84,13 @@ public class MemberServiceImpl implements MemberService {
                 .maxAge(0)
                 .build();
 
+        ResponseCookie nicknameCookie = ResponseCookie.from("nickname", null)
+                .path("/")
+                .maxAge(0)
+                .build();
+
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, nicknameCookie.toString());
     }
 }

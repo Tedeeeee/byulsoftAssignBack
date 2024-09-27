@@ -105,7 +105,7 @@
             and board_region = #{searchText}
         </if>
         <if test="searchType == '제목'">
-            and match(board_title) against (#{searchText})
+            and board_title like CONCAT('%', #{searchText}, '%')
         </if>
     </select>
 
@@ -140,7 +140,7 @@
             and board_region = #{searchText}
         </if>
         <if test="searchType == '제목'">
-            and match(board_title) against (#{searchText})
+            and board_title like CONCAT('%', #{searchText}, '%')
         </if>
         order by board_created_at desc
         limit 5 offset #{offset}

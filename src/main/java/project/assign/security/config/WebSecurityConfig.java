@@ -23,6 +23,7 @@ import project.assign.security.filter.CustomAuthenticationFilter;
 import project.assign.security.filter.JwtAuthenticationFilter;
 import project.assign.security.handler.CustomAccessDeniedHandler;
 import project.assign.security.handler.CustomAuthenticationEntryPoint;
+import project.assign.security.handler.CustomAuthenticationFailureHandler;
 import project.assign.security.handler.CustomAuthenticationSuccessHandler;
 import project.assign.security.provider.CustomAuthenticationProvider;
 import project.assign.security.service.CustomUserDetailService;
@@ -46,29 +47,29 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(AbstractHttpConfigurer::disable)
-                .logout(AbstractHttpConfigurer::disable)
-                .formLogin(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable)
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(AbstractHttpConfigurer::disable)
+            .logout(AbstractHttpConfigurer::disable)
+            .formLogin(AbstractHttpConfigurer::disable)
+            .httpBasic(AbstractHttpConfigurer::disable)
 
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/members/register").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/members/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/boards/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
-                        .anyRequest().authenticated())
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/members/register").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/members/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/boards/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
+                .anyRequest().authenticated())
 
-                .exceptionHandling((exception) -> {
-                    exception.authenticationEntryPoint(customAuthenticationEntryPoint());
-                    exception.accessDeniedHandler(customAccessDeniedHandler());
-                })
+            .exceptionHandling((exception) -> {
+                exception.authenticationEntryPoint(customAuthenticationEntryPoint());
+                exception.accessDeniedHandler(customAccessDeniedHandler());
+            })
 
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                .addFilterAfter(customAuthenticationFilter(), LogoutFilter.class)
-                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+            .addFilterAfter(customAuthenticationFilter(), LogoutFilter.class)
+            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -103,16 +104,17 @@ public class WebSecurityConfig {
         return new CustomAuthenticationProvider(customUserDetailService, memberPasswordEncoder());
     }
 
-    @Bean
-    public CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler() {
-        return new CustomAuthenticationSuccessHandler(memberMapper, tokenUtil, tokenService);
-    }
+//    @Bean
+//    public CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler() {
+//        return new CustomAuthenticationSuccessHandler(memberMapper, tokenUtil, tokenService);
+//    }
 
     @Bean
     public CustomAuthenticationFilter customAuthenticationFilter() {
         CustomAuthenticationFilter customAuthenticationFilter =  new CustomAuthenticationFilter(authenticationManager(), objectMapper);
         customAuthenticationFilter.setFilterProcessesUrl("/api/login");
-        customAuthenticationFilter.setAuthenticationSuccessHandler(customAuthenticationSuccessHandler());
+        customAuthenticationFilter.setAuthenticationSuccessHandler(new CustomAuthenticationSuccessHandler(memberMapper, tokenUtil, tokenService));
+        customAuthenticationFilter.setAuthenticationFailureHandler(new CustomAuthenticationFailureHandler(objectMapper));
         customAuthenticationFilter.afterPropertiesSet();
         return customAuthenticationFilter;
     }

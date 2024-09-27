@@ -68,7 +68,7 @@
                 and b.board_region = #{searchText}
             </if>
             <if test="'제목'.equals(searchType)">
-                and match(b.board_title) against (#{searchText})
+                and board_title like CONCAT('%', #{searchText}, '%')
             </if>
         )
         <if test="'desc'.equals(sortOrder)">

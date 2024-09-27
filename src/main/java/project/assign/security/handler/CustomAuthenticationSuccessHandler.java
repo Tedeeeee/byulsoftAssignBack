@@ -20,8 +20,6 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @Slf4j
 public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
-    //private final MemberService memberService;
-    //private final MemberCheck memberCheck;
     private final MemberMapper memberMapper;
     private final TokenUtil tokenUtil;
     private final TokenService tokenService;

@@ -1,12 +1,15 @@
 package project.assign.security.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,6 +31,7 @@ import java.security.SignatureException;
 import java.util.*;
 
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final TokenUtil tokenUtil;
@@ -40,15 +44,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Optional<String> accessTokenOptional = tokenUtil.extractToken(request, "AccessToken");
 
             if(accessTokenOptional.isPresent()) {
-                handleAccessToken(accessTokenOptional.get());
+                handleAccessToken(accessTokenOptional.get(), response);
             } else {
                 handleRefreshToken(request, response);
             }
 
             filterChain.doFilter(request, response);
-
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("test ", e);
             response.setCharacterEncoding("UTF-8");
             response.setContentType("application/json");
             PrintWriter printWriter = response.getWriter();
@@ -56,6 +59,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             printWriter.print(jsonObject);
             printWriter.flush();
             printWriter.close();
+
+            // filterChain 종료
+            return;
         }
     }
 
@@ -72,7 +78,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
-    private void handleAccessToken(String accessToken) {
+    private void handleAccessToken(String accessToken, HttpServletResponse response) throws IOException {
         if(tokenUtil.isValidToken(accessToken)) {
             String memberEmail = tokenUtil.getMemberEmailFromToken(accessToken);
             Member member = memberMapper.findMemberByEmail(memberEmail)

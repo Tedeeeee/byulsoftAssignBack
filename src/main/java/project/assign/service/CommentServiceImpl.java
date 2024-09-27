@@ -51,10 +51,8 @@ public class CommentServiceImpl implements CommentService {
         Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
                 .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 사용자입니다"));
 
-
         Comment comment = commentMapper.findByCommentId(commentId)
                 .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 댓글입니다"));
-
 
         // 지우려는자와 삭제하려는자가 다를 경우
         if (comment.getWriter(member.getMemberId())) {

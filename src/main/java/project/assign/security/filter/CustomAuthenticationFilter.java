@@ -22,19 +22,22 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
+        UsernamePasswordAuthenticationToken authRequest = null;
         try {
-            UsernamePasswordAuthenticationToken authRequest = getAuthRequest(request);
-
-            setDetails(request, authRequest);
-            return this.getAuthenticationManager().authenticate(authRequest);
-        } catch (Exception e) {
+            authRequest = getAuthRequest(request);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        setDetails(request, authRequest);
+        return this.getAuthenticationManager().authenticate(authRequest);
     }
 
     private UsernamePasswordAuthenticationToken getAuthRequest(HttpServletRequest request) throws IOException {
         Member member = objectMapper.readValue(request.getInputStream(), Member.class);
 
         return new UsernamePasswordAuthenticationToken(member.getMemberEmail(), member.getMemberPassword());
+
+
     }
 }

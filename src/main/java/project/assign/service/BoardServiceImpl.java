@@ -63,7 +63,9 @@ public class BoardServiceImpl implements BoardService {
         Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
                 .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 사용자입니다"));
 
-
+        if (findBoard.getWriter(member.getMemberId())) {
+            throw new BusinessExceptionHandler(HttpStatus.BAD_REQUEST, 400, "회원의 정보가 일치하지 않습니다.");
+        }
         if (findBoard.getWriter(member.getMemberId())) {
             throw new BusinessExceptionHandler(HttpStatus.BAD_REQUEST, 400, "회원의 정보가 일치하지 않습니다.");
         }
@@ -78,11 +80,15 @@ public class BoardServiceImpl implements BoardService {
         // 데이터의 일관성이 중요한 작업이기에 삭제 후 다시 저장으로 진행한다.
         boardStarMapper.deleteBoardStarByBoardId(board.getBoardId());
 
+        // 해당 내용을 메소드로 분리하여 너무 길어지지 않도록 수정
+        // ex) bulkInsertForBoardStars
+
         // 별들을 다시 저장
         List<BoardStarDTO> boardStars = boardRequestDTO.getBoardStars();
 
         List<BoardStar> boardStarList = new ArrayList<>();
-        for (int i = 0; i < boardStars.size(); i++) {
+        int size = boardStars.size();
+        for (int i = 0; i < size; i++) {
             BoardStar boardStar = boardStars.get(i).toEntity(board.getBoardId(), i + 1);
             boardStarList.add(boardStar);
         }

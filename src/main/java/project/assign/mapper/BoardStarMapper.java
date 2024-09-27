@@ -12,5 +12,4 @@ public interface BoardStarMapper {
     void boardStarSaveAll(List<BoardStar> boardStars);
     void deleteBoardStarByBoardId(int boardId);
     List<Integer>sortBoardIdByStarType(SearchConditionDTO searchConditionDTO);
-
 }

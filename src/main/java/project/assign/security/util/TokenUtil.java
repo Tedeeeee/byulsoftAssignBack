@@ -17,6 +17,8 @@ import project.assign.exception.BusinessExceptionHandler;
 import project.assign.security.service.TokenService;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.*;
 
@@ -25,7 +27,6 @@ import java.util.*;
 @RequiredArgsConstructor
 public class TokenUtil {
     private final TokenService tokenService;
-    private final ObjectMapper objectMapper;
 
     // 토큰 전달
     public void sendTokens(HttpServletResponse response, String accessToken, String refreshToken, MemberResponseDTO memberResponseDTO) throws IOException {
@@ -41,13 +42,18 @@ public class TokenUtil {
                 .maxAge(604800)
                 .build();
 
+        // 한글의 닉네임인 경우 비 ASCII 문자이기 때문에 오류 발생으로 한글을 읽을 수 있도록 변경
+        String encodedNickname = URLEncoder.encode(memberResponseDTO.getMemberNickname(), StandardCharsets.UTF_8);
+        ResponseCookie nicknameCookie = ResponseCookie.from("nickname", encodedNickname)
+                .path("/")
+                .maxAge(3600)
+                .build();
+
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
-
-        String memberInfo = objectMapper.writeValueAsString(CommonResponse.success(memberResponseDTO, ""));
-        response.getWriter().write(memberInfo);
+        response.addHeader(HttpHeaders.SET_COOKIE, nicknameCookie.toString());
 
         log.info("Access token 데이터 전송 완료: {}", accessToken);
     }
