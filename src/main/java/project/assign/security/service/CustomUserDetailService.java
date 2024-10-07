@@ -7,7 +7,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import project.assign.entity.Member;
-import project.assign.repository.MemberMapper;
+import project.assign.mapper.MemberMapper;
 
 @Service
 @RequiredArgsConstructor
@@ -22,8 +22,8 @@ public class CustomUserDetailService implements UserDetailsService {
 
         // 탈퇴한 회원을 구분지어야 할까?
         return User.builder()
-                .username(member.getEmail())
-                .password(member.getPassword())
+                .username(member.getMemberEmail())
+                .password(member.getMemberPassword())
                 .build();
     }
 }

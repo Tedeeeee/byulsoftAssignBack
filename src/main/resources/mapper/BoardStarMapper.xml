@@ -3,13 +3,14 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="project.assign.repository.BoardStarMapper">
-    <resultMap id="boardStarMap" type="project.assign.entity.BoardStar">
-        <result column="board_id" property="boardId" />
-        <result column="star_type" property="starType" />
-        <result column="star_short_review" property="starShortReview" />
-        <result column="star_rating" property="starRating" />
-        <result column="sort_no" property="sortNo" />
+<mapper namespace="project.assign.mapper.BoardStarMapper">
+    <resultMap id="boardStarResultMap" type="project.assign.entity.BoardStar">
+        <id property="boardStarId" column="board_star_id"/>
+        <result property="boardId" column="board_id"/>
+        <result property="boardStarType" column="board_star_type"/>
+        <result property="boardStarShortReview" column="board_star_short_review"/>
+        <result property="boardStarRating" column="board_star_rating"/>
+        <result property="sortNo" column="sort_no"/>
     </resultMap>
 
 
@@ -17,61 +18,65 @@
         insert into board_star
         (
             board_id,
-         star_type,
-         star_short_review,
-         star_rating,
+            board_star_type,
+            board_star_short_review,
+            board_star_rating,
             sort_no
         ) values (
             #{boardId},
-            #{starType},
-                  #{starShortReview},
-            #{starRating},
-                  #{sortNo}
+            #{boardStarType},
+            #{boardStarShortReview},
+            #{boardStarRating},
+            #{sortNo}
         )
     </insert>
+    <insert id="boardStarSaveAll" parameterType="project.assign.entity.BoardStar">
+        insert into board_star
+        (
+            board_id,
+            board_star_type,
+            board_star_short_review,
+            board_star_rating,
+            sort_no
+        ) values
+        <foreach collection="boardStars" index="idx" item="item" separator=",">
+            (
+            #{item.boardId},
+            #{item.boardStarType},
+            #{item.boardStarShortReview},
+            #{item.boardStarRating},
+            #{item.sortNo}
+            )
+        </foreach>
+    </insert>
 
-    <update id="boardStarUpdate">
-        update board_star
-        set star_short_review = #{starShortReview},
-            star_rating = #{starRating}
-        where board_id = #{boardId} and star_type = #{starType}
-    </update>
-
-    <select id="getBoardStarByBoardId" resultMap="boardStarMap">
-        select board_id, star_type, star_short_review, star_rating
-        from board_star
+    <delete id="deleteBoardStarByBoardId">
+        delete from board_star
         where board_id = #{boardId}
-        order By sort_no
-    </select>
+    </delete>
 
-    <select id="sortASCBoardIdByStarType" resultType="java.lang.Integer">
+    <select id="sortBoardIdByStarType" resultType="java.lang.Integer">
         select board_id
         from board_star
-        where star_type = #{typeName}
-        order by star_rating
-        limit 5 offset #{offset}
-    </select>
-
-    <select id="sortTest" resultType="project.assign.entity.BoardStar">
-        select board_star_id, board_id, star_type, star_short_review, star_rating, sort_no
-        from board_star
-        <choose>
-            <when test="typeName.equals('')">
-
-            </when>
-            <otherwise>
-                where star_type = #{typeName}
-            </otherwise>
-        </choose>
-        order by star_rating
-        limit 5 offset #{offset}
-    </select>
-
-    <select id="sortDESCBoardIdByStarType" resultType="java.lang.Integer">
-        select board_id
-        from board_star
-        where star_type = #{typeName}
-        order by star_rating desc
+        where board_star_type = #{sortType}
+        and exists(
+            select 1
+            from board b
+            where b.board_is_delete = 0
+            and b.board_id = board_star.board_id
+            <if test="'지역'.equals(searchType)">
+                and b.board_region = #{searchText}
+            </if>
+            <if test="'제목'.equals(searchType)">
+                and board_title like CONCAT('%', #{searchText}, '%')
+            </if>
+        )
+        <if test="'desc'.equals(sortOrder)">
+            order by board_star_rating desc
+        </if>
+        <if test="'asc'.equals(sortOrder)">
+            order by board_star_rating
+        </if>
         limit 5 offset #{offset}
     </select>
 

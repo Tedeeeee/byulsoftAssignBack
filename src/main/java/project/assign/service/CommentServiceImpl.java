@@ -1,18 +1,22 @@
 package project.assign.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.assign.dto.CommentDTO;
 import project.assign.entity.Comment;
 import project.assign.entity.Member;
-import project.assign.repository.CommentMapper;
-import project.assign.repository.MemberMapper;
+import project.assign.exception.BusinessExceptionHandler;
+import project.assign.mapper.CommentMapper;
+import project.assign.mapper.MemberMapper;
 import project.assign.util.SecurityUtil;
 
 import java.util.List;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
 
@@ -22,23 +26,17 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public List<CommentDTO> saveComment(CommentDTO commentDTO) {
-        String memberEmail = SecurityUtil.getCurrentMemberId();
+        Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
+                .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 사용자입니다"));
 
-        Member member = memberMapper.findMemberByEmail(memberEmail)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다"));
-
-        commentDTO.setMemberId(member.getId());
-        commentDTO.setNickname(member.getNickname());
+        commentDTO.setMemberId(member.getMemberId());
 
         // DTO -> Entity
-        Comment comment = CommentDTO.toEntity(commentDTO);
-        try{
-            commentMapper.saveComment(comment);
-            List<Comment> comments = commentMapper.findByBoardId(comment.getBoardId());
-            return comments.stream().map(CommentDTO::from).toList();
-        } catch (Exception e) {
-            throw new RuntimeException("입력 정보에 오류가 있습니다",e);
-        }
+        Comment comment = commentDTO.toEntity();
+
+        commentMapper.saveComment(comment);
+        List<Comment> comments = commentMapper.findByBoardId(comment.getBoardId());
+        return comments.stream().map(CommentDTO::from).toList();
     }
 
     @Override
@@ -49,29 +47,36 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public int deleteByCommentId(int commentId) {
-        SecurityUtil.getCurrentMemberId();
-        try {
-            commentMapper.deleteByCommentId(commentId);
-            return 1;
-        } catch (Exception e) {
-            throw new RuntimeException("삭제에 실패하였습니다", e);
+    public void deleteByCommentId(int commentId) {
+        Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
+                .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 사용자입니다"));
+
+        Comment comment = commentMapper.findByCommentId(commentId)
+                .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 댓글입니다"));
+
+        // 지우려는자와 삭제하려는자가 다를 경우
+        if (comment.getWriter(member.getMemberId())) {
+            throw new BusinessExceptionHandler(HttpStatus.BAD_REQUEST, 400, "회원의 정보가 일치하지 않습니다.");
         }
+
+        commentMapper.deleteByCommentId(commentId);
     }
 
     @Override
     public List<CommentDTO> changeCommentContent(CommentDTO commentDTO) {
-        try {
-            SecurityUtil.getCurrentMemberId();
+        Member member = memberMapper.findMemberByEmail(SecurityUtil.getCurrentMemberEmail())
+                .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 사용자입니다"));
 
-            commentMapper.changeComment(commentDTO.getId(), commentDTO.getContent());
+        Comment comment = commentMapper.findByCommentId(commentDTO.getCommentId())
+                .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.NOT_FOUND, 404, "존재하지 않는 사용자입니다"));
 
-            List<Comment> comments = commentMapper.findByBoardId(commentDTO.getBoardId());
-            return comments.stream().map(CommentDTO::from).toList();
-        } catch (Exception e) {
-            throw new RuntimeException("댓글 수정에 문제가 발생", e);
+        if (comment.getWriter(member.getMemberId())) {
+            throw new BusinessExceptionHandler(HttpStatus.BAD_REQUEST, 400, "회원의 정보가 일치하지 않습니다.");
         }
 
+        commentMapper.changeComment(commentDTO.getCommentId(), commentDTO.getCommentContent());
 
+        List<Comment> comments = commentMapper.findByBoardId(commentDTO.getBoardId());
+        return comments.stream().map(CommentDTO::from).toList();
     }
 }

@@ -3,7 +3,10 @@ package project.assign.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import project.assign.commonApi.CommonResponse;
 import project.assign.dto.CommentDTO;
 import project.assign.service.CommentService;
 
@@ -15,29 +18,31 @@ import java.util.List;
 public class CommentController {
     private final CommentService commentService;
 
+    // 댓글 저장
     @PostMapping("")
-    public ResponseEntity<List<CommentDTO>> saveComment(@RequestBody @Valid CommentDTO commentDTO) {
-        System.out.println(commentDTO.getContent());
+    public CommonResponse<List<CommentDTO>> createComment(@RequestBody @Valid CommentDTO commentDTO) {
         List<CommentDTO> result = commentService.saveComment(commentDTO);
-
-        return ResponseEntity.ok(result);
+        return CommonResponse.success(result, "댓글이 저장되었습니다");
     }
 
+    // 특정 게시글에 담긴 댓글 가져오기
     @GetMapping("/{boardId}")
-    public ResponseEntity<List<CommentDTO>> getAllComments(@PathVariable int boardId) {
+    public CommonResponse<List<CommentDTO>> getCommentsByBoardId(@PathVariable int boardId) {
         List<CommentDTO> comments = commentService.findByBoardId(boardId);
-        return ResponseEntity.ok(comments);
+        return CommonResponse.success(comments, "");
     }
 
+    // 댓글 삭제
     @DeleteMapping("/{commentId}")
-    public ResponseEntity<Integer> deleteComment(@PathVariable int commentId) {
-        int result = commentService.deleteByCommentId(commentId);
-        return ResponseEntity.ok(result);
+    public CommonResponse<Integer> deleteComment(@PathVariable int commentId) {
+        commentService.deleteByCommentId(commentId);
+        return CommonResponse.createSuccess("댓글이 삭제되었습니다");
     }
 
-    @PatchMapping("")
-    public ResponseEntity<List<CommentDTO>> updateComment(@RequestBody CommentDTO commentDTO) {
+    // 댓글 수정
+    @PutMapping("")
+    public CommonResponse<List<CommentDTO>> updateComment(@RequestBody CommentDTO commentDTO) {
         List<CommentDTO> comments = commentService.changeCommentContent(commentDTO);
-        return ResponseEntity.ok(comments);
+        return CommonResponse.success(comments, "댓글이 수정되었습니다");
     }
 }

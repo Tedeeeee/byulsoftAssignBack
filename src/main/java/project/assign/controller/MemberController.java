@@ -1,10 +1,12 @@
 package project.assign.controller;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import project.assign.dto.MemberDTO;
+import project.assign.commonApi.CommonResponse;
+import project.assign.dto.MemberRequestDTO;
 import project.assign.service.MemberService;
 
 @RestController
@@ -14,34 +16,31 @@ public class MemberController {
 
     private final MemberService memberService;
 
+    // 회원가입
     @PostMapping("/register")
-    public ResponseEntity<Integer> register(@RequestBody @Valid MemberDTO memberDTO) {
-        int result = memberService.registerMember(memberDTO);
-        return ResponseEntity.ok(result);
+    public CommonResponse<Integer> register(@RequestBody @Valid MemberRequestDTO memberRequestDTO) {
+        memberService.registerMember(memberRequestDTO);
+        return CommonResponse.createSuccess("회원가입에 성공하였습니다");
     }
 
-    @GetMapping("/checkNickname")
-    public ResponseEntity<String> checkNickName(@RequestParam(name = "nickname") String nickname) {
-        memberService.checkNickname(nickname);
-        return ResponseEntity.ok("사용 가능한 닉네임입니다.");
-    }
-
-    @GetMapping("/checkEmail")
-    public ResponseEntity<String> checkEmail(@RequestParam(name = "email") String email) {
+    // 이메일 체크
+    @GetMapping("/emails/check")
+    public CommonResponse<Integer> checkEmailAvailability(@RequestParam(name = "email") String email) {
         memberService.checkEmail(email);
-        return ResponseEntity.ok("사용 가능한 이메일입니다.");
+        return CommonResponse.createSuccess("사용 가능한 이메일입니다");
     }
 
-    // 로그아웃을 하면 시큐리티의 contextHolder 에 있는 정보를 삭제해야한다.
-    @PatchMapping("")
-    public ResponseEntity<Integer> deleteRefreshToken() {
-        int result = memberService.deleteRefreshToken();
-        return ResponseEntity.ok(result);
+    // 닉네임 체크
+    @GetMapping("/nicknames/check")
+    public CommonResponse<Integer> checkNicknameAvailability(@RequestParam(name = "nickname") String nickname) {
+        memberService.checkNickname(nickname);
+        return CommonResponse.createSuccess("사용 가능한 닉네임입니다");
     }
 
-    @GetMapping("/healthCheck")
-    public ResponseEntity<String> healthCheck() {
-        System.out.println("들어오는가?");
-        return ResponseEntity.ok("헬스 체크 완료");
+    // 로그아웃시 사용자 DB의 refreshToken삭제
+    @DeleteMapping("/logout")
+    public CommonResponse<Integer> removeRefreshToken(HttpServletResponse response) {
+        memberService.deleteRefreshToken(response);
+        return CommonResponse.createSuccess("로그아웃 되었습니다");
     }
 }

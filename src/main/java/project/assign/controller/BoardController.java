@@ -1,15 +1,11 @@
 package project.assign.controller;
 
 import jakarta.validation.Valid;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import project.assign.dto.BoardRequestDTO;
-import project.assign.dto.BoardResponseDTO;
+import project.assign.commonApi.CommonResponse;
+import project.assign.dto.*;
 import project.assign.service.BoardService;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,48 +13,45 @@ import java.util.List;
 public class BoardController {
 
     private final BoardService boardService;
-    @GetMapping("/countPage")
-    public ResponseEntity<Integer> countPage() {
-        int pageCount = boardService.countBoards();
-        return ResponseEntity.ok(pageCount);
+
+    // 게시글 저장 ( 인가 )
+    @PostMapping("")
+    public CommonResponse<Integer> insertContents(@RequestBody @Valid BoardRequestDTO boardRequestDTO) {
+        boardService.saveBoard(boardRequestDTO);
+        return CommonResponse.createSuccess("게시글이 등록되었습니다");
     }
 
-    @PostMapping("/insertContents")
-    public ResponseEntity<Integer> insertContents(@RequestBody @Valid BoardRequestDTO boardRequestDTO) {
-        int result = boardService.saveBoard(boardRequestDTO);
-        return ResponseEntity.ok(result);
+    // 게시글 수정 ( 인가 )
+    @PutMapping("")
+    public CommonResponse<Integer> updateContents(@RequestBody @Valid BoardRequestDTO boardRequestDTO) {
+        boardService.updateBoard(boardRequestDTO);
+        return CommonResponse.createSuccess("게시글이 수정되었습니다");
     }
 
-    @PatchMapping("/updateContents")
-    public ResponseEntity<Integer> updateContents(@RequestBody @Valid BoardRequestDTO boardRequestDTO) {
-        int result = boardService.updateBoard(boardRequestDTO);
-        return ResponseEntity.ok(result);
-    }
-
-    @GetMapping("/allBoard")
-    public ResponseEntity<List<BoardResponseDTO>> getBoards(@RequestParam(name = "pn", defaultValue = "1") int pageNumber) {
-        List<BoardResponseDTO> allBoard = boardService.getAllBoard(pageNumber);
-        return ResponseEntity.ok(allBoard);
-    }
-
-    @GetMapping("/detail/{id}")
-    public ResponseEntity<BoardResponseDTO> getBoard(@PathVariable int id) {
-        BoardResponseDTO board = boardService.findByBoardId(id);
-        return ResponseEntity.ok(board);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Integer> deleteBoard(@PathVariable int id) {
-        int result = boardService.deleteBoard(id);
-        return ResponseEntity.ok(result);
-    }
-
-    @GetMapping("/sort")
-    public ResponseEntity<List<BoardResponseDTO>> sortBoard(@RequestParam(name = "sortName") String sortName,
+    // 정렬된 게시글들 가져오기
+    @GetMapping("")
+    public CommonResponse<BoardListResponseDTO> sortBoard(@RequestParam(name = "searchType") String searchType,
+                                                            @RequestParam(name = "searchText") String searchText,
+                                                            @RequestParam(name = "sortOrder") String sortOrder,
                                                             @RequestParam(name = "sortType") String sortType,
-                                                            @RequestParam(name = "pn", defaultValue = "1") int pageNumber) {
-        List<BoardResponseDTO> boardResponseDTOS = boardService.sortTypeBoard(sortName, sortType, pageNumber);
-        return ResponseEntity.ok(boardResponseDTOS);
+                                                            @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber
+                                                            ) {
+        SearchConditionDTO searchConditionDTO = new SearchConditionDTO(sortOrder, sortType, pageNumber, searchType, searchText);
+        BoardListResponseDTO boardListResponseDTOS = boardService.sortTypeBoard(searchConditionDTO);
+        return CommonResponse.success(boardListResponseDTOS, "");
     }
 
+    // 특정 ID를 가진 게시글 가져오기
+    @GetMapping("/{id}")
+    public CommonResponse<BoardDetailResponseDTO> getBoard(@PathVariable int id) {
+        BoardDetailResponseDTO board = boardService.findByBoardId(id);
+        return CommonResponse.success(board, "");
+    }
+
+    // 게시글 Soft 삭제 ( 인가 )
+    @DeleteMapping("/{id}")
+    public CommonResponse<Integer> deleteBoard(@PathVariable int id) {
+        boardService.deleteBoard(id);
+        return CommonResponse.createSuccess("게시글이 삭제되었습니다");
+    }
 }

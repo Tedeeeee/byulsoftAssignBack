@@ -7,7 +7,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import project.assign.security.service.CustomUserDetailService;
 import project.assign.service.MemberPasswordEncoder;
 
@@ -15,8 +14,7 @@ import project.assign.service.MemberPasswordEncoder;
 public class CustomAuthenticationProvider implements AuthenticationProvider {
 
     private final CustomUserDetailService customUserDetailService;
-    //private final MemberPasswordEncoder memberPasswordEncoder;
-    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final MemberPasswordEncoder memberPasswordEncoder;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -24,13 +22,10 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         String password = authentication.getCredentials().toString();
 
         UserDetails user = customUserDetailService.loadUserByUsername(name);
-        // 비밀번호를 비교하는 곳
-        if(!bCryptPasswordEncoder.matches(password, user.getPassword())) {
+
+        if (!memberPasswordEncoder.matches(password, user.getPassword())) {
             throw new BadCredentialsException("비밀번호가 일치하지 않습니다");
         }
-//        if(!memberPasswordEncoder.passwordMatch(password, user.getPassword())) {
-//            throw new BadCredentialsException("비밀번호가 일치하지 않습니다");
-//        }
 
         return new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
     }

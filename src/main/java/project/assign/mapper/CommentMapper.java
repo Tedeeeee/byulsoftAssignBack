@@ -1,16 +1,18 @@
-package project.assign.repository;
+package project.assign.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import project.assign.entity.Comment;
 
 import java.util.List;
+import java.util.Optional;
 
 @Mapper
 public interface CommentMapper {
 
-    int saveComment(Comment comment);
+    void saveComment(Comment comment);
     List<Comment> findByBoardId(int boardId);
     void deleteByCommentId(int boardId);
-    void changeComment(@Param("id") int id, @Param("content") String content);
+    void changeComment(@Param("commentId") int commentId, @Param("commentContent") String commentContent);
+    Optional<Comment> findByCommentId(int commentId);
 }

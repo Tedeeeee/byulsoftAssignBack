@@ -7,13 +7,14 @@ import lombok.*;
 @Getter
 @Builder
 public class Member {
-    private int id;
-    private String email;
-    private String password;
-    private String nickname;
-    private String name;
-    private String phoneNumber;
-    private String refreshToken;
-    private boolean isDelete;
+    private int memberId;
+    private String memberEmail;
+    private String memberPassword;
+    private String memberNickname;
+    private String memberName;
+    private String memberPhoneNumber;
+    private String memberRefreshToken;
+    private boolean memberIsDelete;
+
 }
 

@@ -3,137 +3,172 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="project.assign.repository.BoardMapper">
-
-    <resultMap id="boardMap" type="project.assign.entity.Board">
-        <result column="id" property="boardId" />
-        <result column="member_id" property="memberId" />
-        <result column="is_delete" property="isDelete"/>
-    </resultMap>
+<mapper namespace="project.assign.mapper.BoardMapper">
     
-    <resultMap id="boardWithBoardStarMap" type="project.assign.entity.Board">
-        <id column="id" property="boardId"/>
-        <result column="member_id" property="memberId" />
-        <result column="title" property="title" />
-        <result column="contents" property="contents" />
-        <result column="region" property="region" />
-        <result column="view" property="view" />
-        <result column="likes" property="likes" />
-        <result column="createdAt" property="createdAt" />
-        <result column="updatedAt" property="updatedAt" />
+    <resultMap id="boardResultMap" type="project.assign.entity.Board">
+        <id property="boardId" column="board_id" />
+        <result property="memberId" column="member_id"/>
+        <result property="memberNickname" column="member_nickname"/>
+        <result property="boardTitle" column="board_title"/>
+        <result property="boardContent" column="board_content"/>
+        <result property="boardRegion" column="board_region"/>
+        <result property="boardView" column="board_view"/>
+        <result property="boardLikes" column="board_likes"/>
+        <result property="boardCreatedAt" column="board_created_at"/>
+        <result property="boardUpdatedAt" column="board_updated_at"/>
         <collection property="stars" ofType="project.assign.entity.BoardStar">
-            <id column="board_star_id" property="boardStarId"/>
-            <result column="board_id" property="boardId" />
-            <result column="star_type" property="starType" />
-            <result column="star_short_review" property="starShortReview" />
-            <result column="star_rating" property="starRating" />
+            <id property="boardStarId" column="board_star_id"/>
+            <result property="boardId" column="board_star_board_id"/>
+            <result property="boardStarType" column="board_star_type"/>
+            <result property="boardStarShortReview" column="board_star_short_review"/>
+            <result property="boardStarRating" column="board_star_rating"/>
         </collection>
+        <collection property="comments" ofType="project.assign.entity.Comment">
+            <id property="commentId" column="comment_id"/>
+            <result property="boardId" column="comment_board_id"/>
+            <result property="memberId" column="member_id"/>
+            <result property="memberNickname" column="member_nickname"/>
+            <result property="commentContent" column="comment_content"/>
+            <result property="commentCreatedAt" column="comment_created_at"/>
+            <result property="commentUpdatedAt" column="comment_updated_at"/>
+        </collection>
+    </resultMap>
 
+    <resultMap id="boardListResultMap" type="project.assign.entity.Board">
+        <id property="boardId" column="board_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="memberNickname" column="member_nickname"/>
+        <result property="boardTitle" column="board_title"/>
+        <result property="boardContent" column="board_content"/>
+        <result property="boardRegion" column="board_region"/>
+        <result property="boardView" column="board_view"/>
+        <result property="boardLikes" column="board_likes"/>
+        <result property="boardCreatedAt" column="board_created_at"/>
+        <result property="boardUpdatedAt" column="board_updated_at"/>
+        <collection property="stars" ofType="project.assign.entity.BoardStar">
+            <id property="boardStarId" column="board_star_id"/>
+            <result property="boardId" column="board_star_board_id"/>
+            <result property="boardStarType" column="board_star_type"/>
+            <result property="boardStarShortReview" column="board_star_short_review"/>
+            <result property="boardStarRating" column="board_star_rating"/>
+        </collection>
     </resultMap>
 
     <insert id="boardSave" parameterType="project.assign.entity.Board" useGeneratedKeys="true" keyProperty="boardId">
         insert into board
         (
             member_id,
-            title,
-            region,
-            contents,
-            view,
-            likes,
-            is_delete
+            board_title,
+            board_region,
+            board_content,
+            board_view,
+            board_likes,
+            board_is_delete
         ) values (
             #{memberId},
-            #{title},
-            #{region},
-            #{contents},
+            #{boardTitle},
+            #{boardRegion},
+            #{boardContent},
             0,
             0,
             false
         )
     </insert>
 
+    <select id="existBoard" resultType="java.lang.Boolean">
+        select exists(
+            select 1
+            from board
+            where board_id = #{boardId}
+        );
+    </select>
+
     <update id="boardUpdate">
         UPDATE board
-        SET title = #{title},
-            region = #{region},
-            contents = #{contents}
-        WHERE id = #{boardId};
+        SET board_title = #{boardTitle},
+            board_region = #{boardRegion},
+            board_content = #{boardContent}
+        WHERE board_id = #{boardId};
     </update>
 
     <update id="deleteBoardById">
         update board
-        set is_delete = true
-        where id = #{id};
+        set board_is_delete = true
+        where board_id = #{boardId};
     </update>
 
-    <select id="boardPagination" resultType="java.lang.Integer">
-        SELECT id
-        FROM board
-        where is_delete = 0
+    <select id="countBoards" resultType="java.lang.Integer">
+        select count(board_id)
+        from board
+        where board_is_delete = 0
+        <if test="searchType == '지역'">
+            and board_region = #{searchText}
+        </if>
+        <if test="searchType == '제목'">
+            and board_title like CONCAT('%', #{searchText}, '%')
+        </if>
+    </select>
+
+    <select id="findByBoardId" resultMap="boardListResultMap">
+        select b.board_id,
+               b.member_id,
+               m.member_nickname,
+               b.board_title,
+               b.board_content,
+               b.board_region,
+               b.board_view,
+               b.board_likes,
+               b.board_updated_at,
+               b.board_created_at,
+               bs.board_star_id,
+               bs.board_star_type,
+               bs.board_star_short_review,
+               bs.board_star_rating
+        from board b
+        join board_star bs on b.board_id = bs.board_id
+        join member m on b.member_id = m.member_id
+        where b.board_is_delete = 0 and b.board_id = ${boardId}
+    </select>
+
+    <!-- 여기는 기준이 board 테이블에 있기 때문에 수정 가능 -->
+    <!-- boardStar 의 기준으로 검색하는 것과 같다 -->
+    <select id="getBasicBoardIdList" resultType="java.lang.Integer">
+        select board_id
+        from board
+        where board_is_delete = 0
+        <if test="searchType == '지역'">
+            and board_region = #{searchText}
+        </if>
+        <if test="searchType == '제목'">
+            and board_title like CONCAT('%', #{searchText}, '%')
+        </if>
+        order by board_created_at desc
         limit 5 offset #{offset}
     </select>
 
-    <select id="countBoards" resultType="java.lang.Integer">
-        select count(id)
-        from board
-        where is_delete = 0
-    </select>
 
-    <select id="findByBoardId" resultMap="boardMap">
-        select
-            id,
-            member_id,
-            title,
-            contents,
-            region,
-            likes,
-            createdAt,
-            updatedAt,
-            view
-        from board
-        where id = #{id} and is_delete = 0;
-    </select>
-
-    <select id="getBoardWithBoardStar" resultMap="boardWithBoardStarMap">
-        select b.id, b.member_id, b.title, b.contents, b.region, b.likes, b.view, b.createdAt, b.updatedAt,
-                bs.star_type, bs.star_short_review, bs.star_rating
+    <select id="getBoardListBySort" resultMap="boardListResultMap">
+        select b.board_id,
+               b.member_id,
+               m.member_nickname,
+               b.board_title,
+               b.board_content,
+               b.board_region,
+               b.board_view,
+               b.board_likes,
+               b.board_updated_at,
+               b.board_created_at,
+               bs.board_star_type,
+               bs.board_star_short_review,
+               bs.board_star_rating
         from board b
-        join board_star bs on b.id = bs.board_id
-        where b.is_delete = 0 and b.id = ${boardId}
-        order by bs.sort_no
-    </select>
-
-    <select id="getTest" resultMap="boardWithBoardStarMap">
-        select b.id, b.member_id, b.title, b.contents, b.region, b.likes, b.view, b.createdAt, b.updatedAt,
-        bs.star_type, bs.star_short_review, bs.star_rating
-        from board b
-        join board_star bs on b.id = bs.board_id
-        where b.is_delete = 0 and b.id in
+        join board_star bs on b.board_id = bs.board_id
+        join member m on b.member_id = m.member_id
+        where b.board_is_delete = 0 and b.board_id in
         <foreach collection="list" item="arr" index="idx"
                  open="(" separator="," close=")">
             #{arr}
         </foreach>
         order by bs.sort_no
-    </select>
-
-    <select id="temp" resultMap="boardWithBoardStarMap">
-        select b.id, b.member_id, b.title, b.contents, b.region, b.likes, b.view, b.createdAt, b.updatedAt,
-               bs.star_type, bs.star_short_review, bs.star_rating
-        FROM BOARD b
-LEFT JOIN board_star bs
-    ON bs.board_id = b.id
-    <if test='!"id".equals(typeName)'>
-        AND bs.star_type =  #{typeName}
-    </if>
-    WHERE b.is_delete = 0
-    <choose>
-        <when test='!"id".equals(typeName)'>
-            ORDER BY bs.star_rating
-        </when>
-        <otherwise>
-            ORDER BY b.id desc
-        </otherwise>
-     </choose>
-    LIMIT 5 OFFSET #{pageOffset}
     </select>
 </mapper>

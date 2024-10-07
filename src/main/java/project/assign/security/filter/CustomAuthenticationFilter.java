@@ -7,9 +7,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import project.assign.entity.Member;
+
+import java.io.IOException;
 
 public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final ObjectMapper objectMapper;
@@ -21,25 +22,22 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
+        UsernamePasswordAuthenticationToken authRequest = null;
         try {
-            UsernamePasswordAuthenticationToken authRequest = getAuthRequest(request);
-
-            setDetails(request, authRequest);
-            return this.getAuthenticationManager().authenticate(authRequest);
-        } catch (Exception e) {
+            authRequest = getAuthRequest(request);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        setDetails(request, authRequest);
+        return this.getAuthenticationManager().authenticate(authRequest);
     }
 
-    private UsernamePasswordAuthenticationToken getAuthRequest(HttpServletRequest request) {
-        try {
-            Member member = objectMapper.readValue(request.getInputStream(), Member.class);
+    private UsernamePasswordAuthenticationToken getAuthRequest(HttpServletRequest request) throws IOException {
+        Member member = objectMapper.readValue(request.getInputStream(), Member.class);
 
-            return new UsernamePasswordAuthenticationToken(member.getEmail(), member.getPassword());
-        } catch (UsernameNotFoundException e) {
-            throw new UsernameNotFoundException("해당 유저는 찾을 수 없습니다.", e);
-        } catch (Exception e) {
-            throw new RuntimeException("에러 발생", e);
-        }
+        return new UsernamePasswordAuthenticationToken(member.getMemberEmail(), member.getMemberPassword());
+
+
     }
 }

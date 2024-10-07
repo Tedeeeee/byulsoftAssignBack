@@ -12,8 +12,8 @@ import lombok.NoArgsConstructor;
 public class BoardStar {
     private int boardStarId;
     private int boardId;
-    private BoardStarType starType;
-    private String starShortReview;
-    private int starRating;
+    private BoardStarType boardStarType;
+    private String boardStarShortReview;
+    private int boardStarRating;
     private int sortNo;
 }

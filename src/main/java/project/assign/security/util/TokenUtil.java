@@ -8,11 +8,17 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
+import project.assign.commonApi.CommonResponse;
+import project.assign.dto.MemberResponseDTO;
+import project.assign.exception.BusinessExceptionHandler;
 import project.assign.security.service.TokenService;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.*;
 
@@ -21,10 +27,9 @@ import java.util.*;
 @RequiredArgsConstructor
 public class TokenUtil {
     private final TokenService tokenService;
-    private final ObjectMapper objectMapper;
 
     // 토큰 전달
-    public void sendTokens(HttpServletResponse response, String accessToken, String refreshToken, String nickname) throws IOException {
+    public void sendTokens(HttpServletResponse response, String accessToken, String refreshToken, MemberResponseDTO memberResponseDTO) throws IOException {
         ResponseCookie accessCookie = ResponseCookie.from(TokenService.ACCESS_TOKEN_SUBJECT, accessToken)
                 .httpOnly(true)
                 .path("/")
@@ -37,13 +42,18 @@ public class TokenUtil {
                 .maxAge(604800)
                 .build();
 
+        // 한글의 닉네임인 경우 비 ASCII 문자이기 때문에 오류 발생으로 한글을 읽을 수 있도록 변경
+        String encodedNickname = URLEncoder.encode(memberResponseDTO.getMemberNickname(), StandardCharsets.UTF_8);
+        ResponseCookie nicknameCookie = ResponseCookie.from("nickname", encodedNickname)
+                .path("/")
+                .maxAge(3600)
+                .build();
+
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
-
-        String userNickname = objectMapper.writeValueAsString(nickname);
-        response.getWriter().write(userNickname);
+        response.addHeader(HttpHeaders.SET_COOKIE, nicknameCookie.toString());
 
         log.info("Access token 데이터 전송 완료: {}", accessToken);
     }
@@ -59,7 +69,7 @@ public class TokenUtil {
     // 토큰에서 사용자 이메일 추출
     public String getMemberEmailFromToken(String token) {
         Claims claims = getClaimsFromToken(token)
-                .orElseThrow(() -> new RuntimeException("토큰에 유저의 정보가 없습니다"));
+                .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.UNAUTHORIZED, 401,  "토큰이 존재하지 않습니다"));
 
         return claims.get("memberEmail").toString();
     }
@@ -79,17 +89,13 @@ public class TokenUtil {
     // 토큰 유효성 검증
     public boolean isValidToken(String token) {
         try {
-            Claims claims = getClaimsFromToken(token)
-                    .orElseThrow(() -> new RuntimeException("토큰이 존재하지 않습니다"));
+            getClaimsFromToken(token)
+                    .orElseThrow(() -> new BusinessExceptionHandler(HttpStatus.UNAUTHORIZED, 401,  "토큰이 존재하지 않습니다"));
 
-            log.info("expireTime : {}", claims.getExpiration());
             return true;
-        } catch (ExpiredJwtException exception) {
-            log.error("만료된 JWT 토큰입니다");
-            return false;
         } catch (JwtException exception) {
-            log.error("토큰에 문제가 있습니다.");
-            return false;
+            log.error(exception.getMessage());
+            throw new BusinessExceptionHandler(HttpStatus.UNAUTHORIZED, 401, "토큰이 유효하지 않거나 존재하지 않습니다");
         }
     }
 }

@@ -3,24 +3,45 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="project.assign.repository.MemberMapper">
-
-    <resultMap id="memberMap" type="project.assign.entity.Member">
-        <result column="phone_number" property="phoneNumber"/>
-        <result column="refresh_token" property="refreshToken"/>
-        <result column="is_delete" property="isDelete"/>
+<mapper namespace="project.assign.mapper.MemberMapper">
+    <resultMap id="memberResultMap" type="project.assign.entity.Member">
+        <id property="memberId" column="member_id"/>
+        <result property="memberEmail" column="member_email"/>
+        <result property="memberPassword" column="member_password"/>
+        <result property="memberNickname" column="member_nickname"/>
+        <result property="memberName" column="member_name"/>
+        <result property="memberPhoneNumber" column="member_phone_number"/>
+        <result property="memberRefreshToken" column="member_refresh_token"/>
+        <result property="memberIsDelete" column="member_is_delete"/>
+        <result property="memberCreatedAt" column="member_created_at"/>
+        <result property="memberUpdatedAt" column="member_updated_at"/>
     </resultMap>
 
+
     <insert id="save" parameterType="project.assign.entity.Member" >
-        INSERT INTO Member(email, password, nickname, name, phone_number, is_delete)
-        values (#{email}, #{password}, #{nickname}, #{name}, #{phoneNumber}, false)
+        INSERT INTO Member
+        (
+           member_email,
+           member_password,
+           member_nickname,
+           member_name,
+           member_phone_number,
+           member_is_delete
+        ) values (
+            #{memberEmail},
+            #{memberPassword},
+            #{memberNickname},
+            #{memberName},
+            #{memberPhoneNumber},
+            false
+        )
     </insert>
 
     <select id="checkNickName" resultType="java.lang.Boolean">
         select exists(
             select 1
             from member
-            where nickname = #{nickname}
+            where member_nickname = #{memberNickname}
         );
     </select>
 
@@ -28,43 +49,47 @@
         select exists(
             select 1
             from member
-            where email = #{email}
+            where member_email = #{memberEmail}
         );
     </select>
 
-    <select id="findMemberIdByNickname" resultType="java.lang.Integer">
-        select id
-        from member
-        where nickname = #{nickname}
-    </select>
-
     <select id="findNicknameById" resultType="java.lang.String">
-        select nickname
+        select member_nickname
         from member
-        where id = #{id}
+        where member_id = #{memberId}
     </select>
 
-    <select id="findMemberByEmail" resultMap="memberMap">
-        select id, password, name, email, phone_number, nickName
+    <select id="findMemberByEmail" resultMap="memberResultMap">
+        select member_id,
+               member_password,
+               member_name,
+               member_email,
+               member_phone_number,
+               member_nickname
         from member
-        where email = #{email} and is_delete = 0
+        where member_email = #{memberEmail} and member_is_delete = 0
     </select>
 
-    <select id="findByRefreshToken" resultType="java.lang.String">
-        select email
+    <select id="findMemberByRefreshToken" resultMap="memberResultMap">
+        select member_id,
+               member_password,
+               member_name,
+               member_email,
+               member_phone_number,
+               member_nickname
         from member
-        where refresh_token = #{refreshToken};
+        where member_refresh_token = #{memberRefreshToken};
     </select>
 
     <update id="saveRefreshToken">
         update member
-        set refresh_token = #{refreshToken}
-        where email = #{email}
+        set member_refresh_token = #{memberRefreshToken}
+        where member_email = #{memberEmail}
     </update>
 
     <update id="deleteRefreshToken">
         update member
-        set refresh_token = null
-        where email = #{memberEmail};
+        set member_refresh_token = null
+        where member_email = #{memberEmail};
     </update>
 </mapper>

@@ -7,9 +7,6 @@ public class TimeChangerUtil {
     public static String timeChange(LocalDateTime time) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-        String formatDateTime = time.format(formatter);
-
-        System.out.println(formatDateTime);
-        return formatDateTime;
+        return time.format(formatter);
     }
 }
